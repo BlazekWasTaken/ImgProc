@@ -17,6 +17,7 @@ static void RunOptions(Options opts)
         
         if (opts.Brightness != 0) output = Operations.Brightness(input, opts.Brightness);
         else if (opts.Negative) output = Operations.Negative(input);
+        else if (opts.HorizontalFlip) output = Operations.HorizontalFlip(input);
         else output = input;
         
         output.SaveAsBmp(opts.Output);

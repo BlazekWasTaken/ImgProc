@@ -9,9 +9,9 @@ public class Operations
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
 
-        for (int i = 0; i < input.Height; i++)
+        for (int i = 0; i < input.Width; i++)
         {
-            for (int j = 0; j < input.Width; j++)
+            for (int j = 0; j < input.Height; j++)
             {
                 output[i, j] = new Rgb24(AddBytes(input[i, j].R, value), AddBytes(input[i, j].G, value), AddBytes(input[i, j].B, value));
             }
@@ -24,11 +24,26 @@ public class Operations
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
 
-        for (int i = 0; i < input.Height; i++)
+        for (int i = 0; i < input.Width; i++)
         {
-            for (int j = 0; j < input.Width; j++)
+            for (int j = 0; j < input.Height; j++)
             {
                 output[i, j] = new Rgb24(FlipByte(input[i, j].R), FlipByte(input[i, j].G), FlipByte(input[i, j].B));
+            }
+        }
+
+        return output;
+    }
+
+    public static Image<Rgb24> HorizontalFlip(Image<Rgb24> input)
+    {
+        var output = new Image<Rgb24>(input.Width, input.Height);
+
+        for (int i = 0; i < input.Width; i++)
+        {
+            for (int j = 0; j < input.Height; j++)
+            {
+                output[i, j] = input[input.Width - i - 1, j];
             }
         }
 
