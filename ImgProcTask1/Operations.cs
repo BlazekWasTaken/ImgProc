@@ -65,6 +65,26 @@ public class Operations
 
         return output;
     }
+    
+    public static Image<Rgb24> VerticalFlip(Image<Rgb24> input)
+    {
+        var output = new Image<Rgb24>(input.Width, input.Height);
+
+        for (int i = 0; i < input.Width; i++)
+        {
+            for (int j = 0; j < input.Height; j++)
+            {
+                output[i, j] = input[i, input.Height - j - 1];
+            }
+        }
+
+        return output;
+    }
+    
+    public static Image<Rgb24> DiagonalFlip(Image<Rgb24> input)
+    {
+        return VerticalFlip(HorizontalFlip(input));
+    }
 
     public static Image<Rgb24> Shrink(Image<Rgb24> input, int factor)
     {
@@ -83,6 +103,30 @@ public class Operations
         }
 
         return output;
+    }
+    
+    public static Image<Rgb24> Enlarge(Image<Rgb24> input, int factor)
+    {
+        var newWidth = input.Width * factor;
+        var newHeight = input.Height * factor;
+        
+        var output1 = new Image<Rgb24>(newWidth, newHeight);
+        
+        for (int i = 0; i < input.Width; i++)
+        {
+            for (int j = 0; j < input.Height; j++)
+            {
+                for (int k = 0; k < factor; k++)
+                {
+                    for (int l = 0; l < factor; l++)
+                    {
+                        output1[i * factor + k, j * factor + l] = new Rgb24(input[i, j].R, input[i, j].G, input[i, j].B);
+                    }
+                }
+            }
+        }
+
+        return output1;
     }
 
     public static Image<Rgb24> MidpointFilter(Image<Rgb24> input)
