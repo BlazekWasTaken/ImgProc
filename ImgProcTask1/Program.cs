@@ -34,6 +34,7 @@ static void RunOptions(Options opts)
             else if (opts.Shrink != 0) output = Operations.Shrink(input, opts.Shrink);
             else if (opts.Enlarge != 0) output = Operations.Enlarge(input, opts.Enlarge);
             else if (opts.Midpoint) output = Operations.MidpointFilter(input);
+            else if (opts.Mean) output = Operations.ArithmeticMeanFilter(input);
             else throw new ArgumentException();
             
             output.SaveAsBmp(opts.Output);

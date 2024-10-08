@@ -134,6 +134,21 @@ public class Operations
         }
         return output;
     }
+
+    public static Image<Rgb24> ArithmeticMeanFilter(Image<Rgb24> input)
+    {
+        var output = new Image<Rgb24>(input.Width, input.Height);
+
+        for (int i = 1; i < input.Width - 1; i++)
+        {
+            for (int j = 1; j < input.Height - 1; j++)
+            {
+                output[i, j] = GetArithmeticMean(GetSurrounding(input, i, j));
+            }
+        }
+        return output;
+    }
+
     #endregion
     
     #region Analysis (E)
@@ -205,6 +220,16 @@ public class Operations
             R = (byte)((values.Max(x => x.R) + values.Min(x => x.R)) / 2),
             G = (byte)((values.Max(x => x.G) + values.Min(x => x.G)) / 2),
             B = (byte)((values.Max(x => x.B) + values.Min(x => x.B)) / 2)
+        };
+        return pixel;
+    }
+    private static Rgb24 GetArithmeticMean(List<Rgb24> values)
+    {
+        var pixel = new Rgb24
+        {
+            R = (byte)(values.Sum(x => x.R) / values.Count),
+            G = (byte)(values.Sum(x => x.G) / values.Count),
+            B = (byte)(values.Sum(x => x.B) / values.Count)
         };
         return pixel;
     }
