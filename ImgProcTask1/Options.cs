@@ -16,7 +16,7 @@ public class Options
     public int Brightness { get; set; }
     
     [Option(longName: "contrast", Required = false, HelpText = "Contrast value.")]
-    public int Contrast { get; set; }
+    public double Contrast { get; set; }
     
     [Option(longName: "negative", Required = false, HelpText = "Negative.", Default = false)]
     public bool Negative { get; set; }

@@ -19,6 +19,22 @@ public class Operations
 
         return output;
     }
+    
+    public static Image<Rgb24> Contrast(Image<Rgb24> input, double value)
+    {
+        var output = new Image<Rgb24>(input.Width, input.Height);
+        double a = (1 - value) * 128;
+
+        for (int i = 0; i < input.Width; i++)
+        {
+            for (int j = 0; j < input.Height; j++)
+            {
+                output[i, j] = new Rgb24(AddBytes(MultiplyByte(input[i, j].R, value), a), AddBytes(MultiplyByte(input[i, j].G, value), a), AddBytes(MultiplyByte(input[i, j].B, value), a));
+            }
+        }
+
+        return output;
+    }
 
     public static Image<Rgb24> Negative(Image<Rgb24> input)
     {
@@ -55,6 +71,26 @@ public class Operations
     private static byte AddBytes(byte input, int value)
     {
         var result = input + value;
+        return result switch
+        {
+            > 255 => 255,
+            < 0 => 0,
+            _ => (byte)result
+        };
+    }
+    private static byte AddBytes(byte input, double value)
+    {
+        var result = input + value;
+        return result switch
+        {
+            > 255 => 255,
+            < 0 => 0,
+            _ => (byte)result
+        };
+    }
+    private static byte MultiplyByte(byte input, double value)
+    {
+        var result = input * value;
         return result switch
         {
             > 255 => 255,
