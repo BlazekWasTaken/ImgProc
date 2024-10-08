@@ -66,6 +66,40 @@ public class Operations
         return output;
     }
 
+    public static Image<Rgb24> Shrink(Image<Rgb24> input, int factor)
+    {
+        var newWidth = input.Width / factor;
+        var newHeight = input.Height / factor;
+        
+        var output = new Image<Rgb24>(newWidth, newHeight);
+        
+        for (int i = 0; i < newWidth; i++)
+        {
+            for (int j = 0; j < newHeight; j++)
+            {
+                output[i, j] = new Rgb24(input[i * factor, j * factor].R, input[i * factor, j * factor].G,
+                    input[i * factor, j * factor].B);
+            }
+        }
+
+        return output;
+    }
+
+    public static Image<Rgb24> MidpointFilter(Image<Rgb24> input)
+    {
+        var output = new Image<Rgb24>(input.Width, input.Height);
+
+        for (int i = 1; i < input.Width - 1; i++)
+        {
+            for (int j = 1; j < input.Height - 1; j++)
+            {
+                output[i, j] = GetMidpoint(GetSurrounding(input, i, j));
+            }
+        }
+
+        return output;
+    }
+
     #region Utility functions
 
     private static byte AddBytes(byte input, int value)
@@ -101,6 +135,32 @@ public class Operations
     private static byte FlipByte(byte input)
     {
         return (byte)(255 - input);
+    }
+
+    private static Rgb24 GetMidpoint(List<Rgb24> values)
+    {
+        var pixel = new Rgb24();
+
+        pixel.R = (byte)((values.Max(x => x.R) + values.Min(x => x.R)) / 2);
+        pixel.G = (byte)((values.Max(x => x.G) + values.Min(x => x.G)) / 2);
+        pixel.B = (byte)((values.Max(x => x.B) + values.Min(x => x.B)) / 2);
+
+        return pixel;
+    }
+
+    private static List<Rgb24> GetSurrounding(Image<Rgb24> input, int i, int j)
+    {
+        var surrounding = new List<Rgb24>();
+
+        for (int k = i - 1; k <= i + 1; k++)
+        {
+            for (int l = j - 1; l <= j + 1; l++)
+            {
+                surrounding.Add(input[k, l]);
+            }
+        }
+        
+        return surrounding;
     }
 
     #endregion

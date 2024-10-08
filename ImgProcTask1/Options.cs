@@ -41,5 +41,17 @@ public class Options
     public int Enlarge { get; set; }
     
     #endregion
+
+    #region Noise removal
+    
+    [Option(longName: "mid", Required = false, HelpText = "Midpoint filter noise removal.", Default = false)]
+    public bool Midpoint { get; set; }
+    
+    [Option(longName: "amean", Required = false, HelpText = "Arithmetic mean filter noise removal.", Default = false)]
+    public bool Mean { get; set; }
+
+    #endregion
+    
+    // N4 noise removal
     
 }
