@@ -162,15 +162,95 @@ public class Operations
         {
             for (int j = 0; j < input.Height; j++)
             {
-                sum += (ulong)SubtractBytes(input[i, j].R, output[i, j].R) ^ 2;
-                sum += (ulong)SubtractBytes(input[i, j].G, output[i, j].G) ^ 2;
-                sum += (ulong)SubtractBytes(input[i, j].B, output[i, j].B) ^ 2;
+                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].R, output[i, j].R), 2);
+                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].G, output[i, j].G), 2);
+                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].B, output[i, j].B), 2);
             }
         }
         sum /= (ulong)(input.Width * input.Height * 3);
         var square = Math.Sqrt(sum);
 
         return square;
+    }
+
+    public static double PeakMeanSquaredError(Image<Rgb24> input, Image<Rgb24> output)
+    {
+        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
+        
+        int p = (int)(Math.Pow(2, (input.PixelType.BitsPerPixel / 3)) - 1);
+        return MeanSquaredError(input, output)/(Math.Pow(p, 2));
+    }
+
+    public static double SignalToNoiseRatio(Image<Rgb24> input, Image<Rgb24> output)
+    {
+        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
+
+        ulong summ = 0;
+
+        for (int i = 0; i < input.Width; i++)
+        {
+            for (int j = 0; j < input.Height; j++)
+            {
+                summ += (ulong)Math.Pow(output[i, j].R, 2) + (ulong)Math.Pow(output[i, j].G, 2) + (ulong)Math.Pow(output[i, j].B, 2);
+            }
+        }
+
+        ulong sum = 0;
+        
+        for (int i = 0; i < input.Width; i++)
+        {
+            for (int j = 0; j < input.Height; j++)
+            {
+                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].R, output[i, j].R), 2);
+                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].G, output[i, j].G), 2);
+                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].B, output[i, j].B), 2);
+            }
+        }
+        
+        if (sum == 0) throw new DivideByZeroException();
+        return summ / sum;
+    }
+
+    public static double PeakSignalToNoiseRatio(Image<Rgb24> input, Image<Rgb24> output)
+    {
+        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
+        
+        ulong p = (ulong)(Math.Pow(2,input.PixelType.BitsPerPixel / 3) - 1);
+
+        ulong sum = 0;
+        
+        for (int i = 0; i < input.Width; i++)
+        {
+            for (int j = 0; j < input.Height; j++)
+            {
+                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].R, output[i, j].R), 2);
+                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].G, output[i, j].G), 2);
+                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].B, output[i, j].B), 2);
+            }
+        }
+        
+        if (sum == 0) throw new DivideByZeroException();
+
+        return 10 * Math.Log10((Math.Pow(p, 2) * input.Height * input.Width) / sum);
+    }
+
+    public static int MaximumDifference(Image<Rgb24> input, Image<Rgb24> output)
+    {
+        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
+        
+        List<int> difference = new List<int>(); 
+
+        for (int i = 0; i < input.Height; i++)
+        {
+            for (int j = 0; j < input.Width; j++)
+            {
+                var inp = ((input[i,j].R + input[i,j].G + input[i,j].B) / 3);
+                var outp = ((output[i,j].R + output[i,j].G + output[i,j].B) / 3);
+                difference.Add(inp - outp);
+            }
+        }
+
+        return difference.Max();
     }
     #endregion
 

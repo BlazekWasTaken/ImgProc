@@ -17,10 +17,10 @@ static void RunOptions(Options opts)
         s.Start();
         
         if (opts.MeanSquaredError) Console.WriteLine(Operations.MeanSquaredError(Image.Load<Rgb24>(opts.Input), Image.Load<Rgb24>(opts.Output)));
-        else if (opts.PeakMeanSquaredError) Console.WriteLine();
-        else if (opts.SignalToNoiseRatio) Console.WriteLine();
-        else if (opts.PeakSignalToNoiseRatio) Console.WriteLine();
-        else if (opts.MaximumDifference) Console.WriteLine();
+        else if (opts.PeakMeanSquaredError) Console.WriteLine(Operations.PeakMeanSquaredError(Image.Load<Rgb24>(opts.Input),Image.Load<Rgb24>(opts.Output)));
+        else if (opts.SignalToNoiseRatio) Console.WriteLine(Operations.SignalToNoiseRatio(Image.Load<Rgb24>(opts.Input), Image.Load<Rgb24>(opts.Output)));
+        else if (opts.PeakSignalToNoiseRatio) Console.WriteLine(Operations.PeakSignalToNoiseRatio(Image.Load<Rgb24>(opts.Input), Image.Load<Rgb24>(opts.Output)));
+        else if (opts.MaximumDifference) Console.WriteLine(Operations.MaximumDifference(Image.Load<Rgb24>(opts.Input), Image.Load<Rgb24>(opts.Output)));
         else
         {
             var input = Image.Load<Rgb24>(opts.Input);
