@@ -3,7 +3,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace ImgProcTask1;
 
-public class Operations
+public static class Operations
 {
     #region Elementary operations (B)
     public static Image<Rgb24> Brightness(Image<Rgb24> input, int value)
@@ -134,7 +134,6 @@ public class Operations
         }
         return output;
     }
-
     public static Image<Rgb24> ArithmeticMeanFilter(Image<Rgb24> input)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
@@ -148,7 +147,6 @@ public class Operations
         }
         return output;
     }
-
     #endregion
     
     #region Analysis (E)
@@ -172,15 +170,13 @@ public class Operations
 
         return square;
     }
-
     public static double PeakMeanSquaredError(Image<Rgb24> input, Image<Rgb24> output)
     {
         if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
         
-        int p = (int)(Math.Pow(2, (input.PixelType.BitsPerPixel / 3)) - 1);
+        int p = (int)(Math.Pow(2, input.PixelType.BitsPerPixel / 3) - 1);
         return MeanSquaredError(input, output)/(Math.Pow(p, 2));
     }
-
     public static double SignalToNoiseRatio(Image<Rgb24> input, Image<Rgb24> output)
     {
         if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
@@ -210,12 +206,11 @@ public class Operations
         if (sum == 0) throw new DivideByZeroException();
         return summ / sum;
     }
-
     public static double PeakSignalToNoiseRatio(Image<Rgb24> input, Image<Rgb24> output)
     {
         if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
         
-        ulong p = (ulong)(Math.Pow(2,input.PixelType.BitsPerPixel / 3) - 1);
+        ulong p = (ulong)(Math.Pow(2, input.PixelType.BitsPerPixel / 3) - 1);
 
         ulong sum = 0;
         
@@ -233,7 +228,6 @@ public class Operations
 
         return 10 * Math.Log10((Math.Pow(p, 2) * input.Height * input.Width) / sum);
     }
-
     public static int MaximumDifference(Image<Rgb24> input, Image<Rgb24> output)
     {
         if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();

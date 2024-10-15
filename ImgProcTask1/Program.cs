@@ -43,8 +43,8 @@ static void RunOptions(Options opts)
         s.Stop();
         Console.WriteLine(s.ElapsedMilliseconds);
     }
-    catch (Exception)
+    catch (Exception e)
     {
-        Console.WriteLine("Something went wrong");
+        Console.WriteLine("Something went wrong: " + e.Message);
     }
 }
