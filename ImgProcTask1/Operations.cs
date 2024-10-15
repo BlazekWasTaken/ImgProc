@@ -6,6 +6,7 @@ namespace ImgProcTask1;
 public static class Operations
 {
     #region Elementary operations (B)
+
     public static Image<Rgb24> Brightness(ref Image<Rgb24> input, int value)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
@@ -14,23 +15,28 @@ public static class Operations
         {
             for (int j = 0; j < input.Height; j++)
             {
-                output[i, j] = new Rgb24(AddBytes(input[i, j].R, value), AddBytes(input[i, j].G, value), AddBytes(input[i, j].B, value));
+                output[i, j] = new Rgb24(AddBytes(input[i, j].R, value), AddBytes(input[i, j].G, value),
+                    AddBytes(input[i, j].B, value));
             }
         }
+
         return output;
     }
-    public static Image<Rgb24> Contrast(ref Image<Rgb24> input, double value)
+
+    public static Image<Rgb24> Contrast(ref Image<Rgb24> input, double a)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
-        double a = (1 - value) * 128;
+        double b = (1 - a) * 128;
 
-        for (int i = 0; i < input.Width; i++)
-        {
-            for (int j = 0; j < input.Height; j++)
+        
+            for (int i = 0; i < input.Width; i++)
             {
-                output[i, j] = new Rgb24(AddBytes(MultiplyByte(input[i, j].R, value), a), AddBytes(MultiplyByte(input[i, j].G, value), a), AddBytes(MultiplyByte(input[i, j].B, value), a));
+                for (int j = 0; j < input.Height; j++)
+                {
+                    output[i, j] = new Rgb24(AddBytes(MultiplyByte(input[i, j].R, a), b), AddBytes(MultiplyByte(input[i, j].G, a), b), AddBytes(MultiplyByte(input[i, j].B, a), b));
+                }
             }
-        }
+
         return output;
     }
     public static Image<Rgb24> Negative(ref Image<Rgb24> input)
@@ -148,6 +154,7 @@ public static class Operations
         }
         return output;
     }
+
     #endregion
     
     #region Analysis (E)
@@ -260,7 +267,8 @@ public static class Operations
             _ => (byte)result
         };
     }
-    private static byte AddBytes(byte input, double value)
+    
+    private static byte AddBytes(double input, double value)
     {
         var result = input + value;
         return result switch
@@ -270,19 +278,16 @@ public static class Operations
             _ => (byte)result
         };
     }
+
+    
     private static byte SubtractBytes(byte input1, byte input2)
     {
         return (byte)Math.Abs(input1 - input2);
     }
-    private static byte MultiplyByte(byte input, double value)
+    private static double MultiplyByte(byte input, double value)
     {
         var result = input * value;
-        return result switch
-        {
-            > 255 => 255,
-            < 0 => 0,
-            _ => (byte)result
-        };
+        return result;
     }
     private static byte FlipByte(byte input)
     {
