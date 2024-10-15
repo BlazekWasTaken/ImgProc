@@ -2,7 +2,7 @@ using CommandLine;
 
 namespace ImgProcTask1;
 
-public abstract class Options
+public class Options
 {
     [Option(longName: "input", Required = true, HelpText = "Input file.")]
     public string Input { get; set; }

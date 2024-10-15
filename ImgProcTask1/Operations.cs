@@ -6,7 +6,7 @@ namespace ImgProcTask1;
 public static class Operations
 {
     #region Elementary operations (B)
-    public static Image<Rgb24> Brightness(Image<Rgb24> input, int value)
+    public static Image<Rgb24> Brightness(ref Image<Rgb24> input, int value)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
 
@@ -19,7 +19,7 @@ public static class Operations
         }
         return output;
     }
-    public static Image<Rgb24> Contrast(Image<Rgb24> input, double value)
+    public static Image<Rgb24> Contrast(ref Image<Rgb24> input, double value)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
         double a = (1 - value) * 128;
@@ -33,7 +33,7 @@ public static class Operations
         }
         return output;
     }
-    public static Image<Rgb24> Negative(Image<Rgb24> input)
+    public static Image<Rgb24> Negative(ref Image<Rgb24> input)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
 
@@ -49,7 +49,7 @@ public static class Operations
     #endregion
     
     #region Geometric operations (G)
-    public static Image<Rgb24> HorizontalFlip(Image<Rgb24> input)
+    public static Image<Rgb24> HorizontalFlip(ref Image<Rgb24> input)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
 
@@ -62,7 +62,7 @@ public static class Operations
         }
         return output;
     }
-    public static Image<Rgb24> VerticalFlip(Image<Rgb24> input)
+    public static Image<Rgb24> VerticalFlip(ref Image<Rgb24> input)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
 
@@ -75,11 +75,12 @@ public static class Operations
         }
         return output;
     }
-    public static Image<Rgb24> DiagonalFlip(Image<Rgb24> input)
+    public static Image<Rgb24> DiagonalFlip(ref Image<Rgb24> input)
     {
-        return VerticalFlip(HorizontalFlip(input));
+        var hflip = HorizontalFlip(ref input);
+        return VerticalFlip(ref hflip);
     }
-    public static Image<Rgb24> Shrink(Image<Rgb24> input, int factor)
+    public static Image<Rgb24> Shrink(ref Image<Rgb24> input, int factor)
     {
         var newWidth = input.Width / factor;
         var newHeight = input.Height / factor;
@@ -96,7 +97,7 @@ public static class Operations
         }
         return output;
     }
-    public static Image<Rgb24> Enlarge(Image<Rgb24> input, int factor)
+    public static Image<Rgb24> Enlarge(ref Image<Rgb24> input, int factor)
     {
         var newWidth = input.Width * factor;
         var newHeight = input.Height * factor;
@@ -121,7 +122,7 @@ public static class Operations
     #endregion
 
     #region Noise removal (N)
-    public static Image<Rgb24> MidpointFilter(Image<Rgb24> input)
+    public static Image<Rgb24> MidpointFilter(ref Image<Rgb24> input)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
 
@@ -134,7 +135,7 @@ public static class Operations
         }
         return output;
     }
-    public static Image<Rgb24> ArithmeticMeanFilter(Image<Rgb24> input)
+    public static Image<Rgb24> ArithmeticMeanFilter(ref Image<Rgb24> input)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
 
@@ -150,7 +151,7 @@ public static class Operations
     #endregion
     
     #region Analysis (E)
-    public static double MeanSquaredError(Image<Rgb24> input, Image<Rgb24> output)
+    public static double MeanSquaredError(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
         if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
         
@@ -170,14 +171,14 @@ public static class Operations
 
         return square;
     }
-    public static double PeakMeanSquaredError(Image<Rgb24> input, Image<Rgb24> output)
+    public static double PeakMeanSquaredError(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
         if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
         
         int p = (int)(Math.Pow(2, input.PixelType.BitsPerPixel / 3) - 1);
-        return MeanSquaredError(input, output)/(Math.Pow(p, 2));
+        return MeanSquaredError(ref input, ref output)/(Math.Pow(p, 2));
     }
-    public static double SignalToNoiseRatio(Image<Rgb24> input, Image<Rgb24> output)
+    public static double SignalToNoiseRatio(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
         if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
 
@@ -206,7 +207,7 @@ public static class Operations
         if (sum == 0) throw new DivideByZeroException();
         return summ / sum;
     }
-    public static double PeakSignalToNoiseRatio(Image<Rgb24> input, Image<Rgb24> output)
+    public static double PeakSignalToNoiseRatio(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
         if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
         
@@ -228,11 +229,11 @@ public static class Operations
 
         return 10 * Math.Log10((Math.Pow(p, 2) * input.Height * input.Width) / sum);
     }
-    public static int MaximumDifference(Image<Rgb24> input, Image<Rgb24> output)
+    public static int MaximumDifference(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
         if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
         
-        List<int> difference = new List<int>(); 
+        List<int> difference = []; 
 
         for (int i = 0; i < input.Height; i++)
         {
