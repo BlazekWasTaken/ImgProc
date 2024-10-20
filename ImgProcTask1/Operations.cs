@@ -6,7 +6,6 @@ namespace ImgProcTask1;
 public static class Operations
 {
     #region Elementary operations (B)
-
     public static Image<Rgb24> Brightness(ref Image<Rgb24> input, int value)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
@@ -22,7 +21,6 @@ public static class Operations
 
         return output;
     }
-
     public static Image<Rgb24> Contrast(ref Image<Rgb24> input, double a)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
@@ -160,7 +158,7 @@ public static class Operations
     #region Analysis (E)
     public static double MeanSquaredError(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
-        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
+        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException("Images are of different sizes");
         
         ulong sum = 0;
         
@@ -180,14 +178,14 @@ public static class Operations
     }
     public static double PeakMeanSquaredError(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
-        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
+        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException("Images are of different sizes");
         
-        int p = (int)(Math.Pow(2, input.PixelType.BitsPerPixel / 3) - 1);
+        var p = (int)(Math.Pow(2, input.PixelType.BitsPerPixel / 3) - 1);
         return MeanSquaredError(ref input, ref output)/(Math.Pow(p, 2));
     }
     public static double SignalToNoiseRatio(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
-        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
+        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException("Images are of different sizes");
 
         ulong summ = 0;
 
@@ -216,7 +214,7 @@ public static class Operations
     }
     public static double PeakSignalToNoiseRatio(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
-        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
+        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException("Images are of different sizes");
         
         ulong p = (ulong)(Math.Pow(2, input.PixelType.BitsPerPixel / 3) - 1);
 
@@ -238,7 +236,7 @@ public static class Operations
     }
     public static int MaximumDifference(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
-        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException();
+        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException("Images are of different sizes");
         
         List<int> difference = []; 
 
@@ -267,7 +265,6 @@ public static class Operations
             _ => (byte)result
         };
     }
-    
     private static byte AddBytes(double input, double value)
     {
         var result = input + value;
@@ -278,8 +275,6 @@ public static class Operations
             _ => (byte)result
         };
     }
-
-    
     private static byte SubtractBytes(byte input1, byte input2)
     {
         return (byte)Math.Abs(input1 - input2);
@@ -291,7 +286,7 @@ public static class Operations
     }
     private static byte FlipByte(byte input)
     {
-        return (byte)(255 - input);
+        return (byte)~input;
     }
     private static Rgb24 GetMidpoint(List<Rgb24> values)
     {

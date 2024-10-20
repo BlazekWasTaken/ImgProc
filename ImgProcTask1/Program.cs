@@ -39,7 +39,7 @@ static void RunOptions(Options opts)
             else if (opts.Enlarge != 0) output = Operations.Enlarge(ref input, opts.Enlarge);
             else if (opts.Midpoint) output = Operations.MidpointFilter(ref input);
             else if (opts.Mean) output = Operations.ArithmeticMeanFilter(ref input);
-            else throw new ArgumentException();
+            else throw new ArgumentException("no options provided");
             
             output.SaveAsBmp(opts.Output);
         }
