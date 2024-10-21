@@ -9,7 +9,6 @@ public static class Operations
     public static Image<Rgb24> Brightness(ref Image<Rgb24> input, int value)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
-
         for (int i = 0; i < input.Width; i++)
         {
             for (int j = 0; j < input.Height; j++)
@@ -18,34 +17,39 @@ public static class Operations
                     AddBytes(input[i, j].B, value));
             }
         }
-
         return output;
     }
     public static Image<Rgb24> Contrast(ref Image<Rgb24> input, double a)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
-        double b = (1 - a) * 128;
-
         
-            for (int i = 0; i < input.Width; i++)
+        double b = (1 - a) * 128;
+        for (int i = 0; i < input.Width; i++)
+        {
+            for (int j = 0; j < input.Height; j++)
             {
-                for (int j = 0; j < input.Height; j++)
-                {
-                    output[i, j] = new Rgb24(AddBytes(MultiplyByte(input[i, j].R, a), b), AddBytes(MultiplyByte(input[i, j].G, a), b), AddBytes(MultiplyByte(input[i, j].B, a), b));
-                }
+                output[i, j] = 
+                    new Rgb24(
+                        AddBytes(input[i, j].R * a, b), 
+                        AddBytes(input[i, j].G * a, b), 
+                        AddBytes(input[i, j].B * a, b));
             }
-
+        }
         return output;
     }
     public static Image<Rgb24> Negative(ref Image<Rgb24> input)
     {
         var output = new Image<Rgb24>(input.Width, input.Height);
-
+        
         for (int i = 0; i < input.Width; i++)
         {
             for (int j = 0; j < input.Height; j++)
             {
-                output[i, j] = new Rgb24(FlipByte(input[i, j].R), FlipByte(input[i, j].G), FlipByte(input[i, j].B));
+                output[i, j] = 
+                    new Rgb24(
+                        FlipByte(input[i, j].R), 
+                        FlipByte(input[i, j].G), 
+                        FlipByte(input[i, j].B));
             }
         }
         return output;
@@ -95,8 +99,7 @@ public static class Operations
         {
             for (int j = 0; j < newHeight; j++)
             {
-                output[i, j] = new Rgb24(input[i * factor, j * factor].R, input[i * factor, j * factor].G,
-                    input[i * factor, j * factor].B);
+                output[i, j] = input[i * factor, j * factor];
             }
         }
         return output;
@@ -116,7 +119,7 @@ public static class Operations
                 {
                     for (int l = 0; l < factor; l++)
                     {
-                        output[i * factor + k, j * factor + l] = new Rgb24(input[i, j].R, input[i, j].G, input[i, j].B);
+                        output[i * factor + k, j * factor + l] = input[i, j];
                     }
                 }
             }
@@ -126,86 +129,89 @@ public static class Operations
     #endregion
 
     #region Noise removal (N)
-    public static Image<Rgb24> MidpointFilter(ref Image<Rgb24> input)
+    public static Image<Rgb24> MidpointFilter(ref Image<Rgb24> input, int window)
     {
+        if (window % 2 == 0) throw new ArgumentException("Window size must be odd");
         var output = new Image<Rgb24>(input.Width, input.Height);
+        var change = (window - 1) / 2;
 
-        for (int i = 1; i < input.Width - 1; i++)
+        for (int i = change; i < input.Width - change; i++)
         {
-            for (int j = 1; j < input.Height - 1; j++)
+            for (int j = change; j < input.Height - change; j++)
             {
-                output[i, j] = GetMidpoint(GetSurrounding(input, i, j));
+                output[i, j] = GetMidpoint(GetSurrounding(input, i, j, change));
             }
         }
         return output;
     }
-    public static Image<Rgb24> ArithmeticMeanFilter(ref Image<Rgb24> input)
+    public static Image<Rgb24> ArithmeticMeanFilter(ref Image<Rgb24> input, int window)
     {
+        if (window % 2 == 0) throw new ArgumentException("Window size must be odd");
         var output = new Image<Rgb24>(input.Width, input.Height);
-
-        for (int i = 1; i < input.Width - 1; i++)
+        var change = (window - 1) / 2;
+        
+        for (int i = change; i < input.Width - change; i++)
         {
-            for (int j = 1; j < input.Height - 1; j++)
+            for (int j = change; j < input.Height - change; j++)
             {
-                output[i, j] = GetArithmeticMean(GetSurrounding(input, i, j));
+                output[i, j] = GetArithmeticMean(GetSurrounding(input, i, j, change));
             }
         }
         return output;
     }
-
     #endregion
     
     #region Analysis (E)
     public static double MeanSquaredError(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
-        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException("Images are of different sizes");
+        if (input.Height != output.Height || input.Width != output.Width) 
+            throw new ArgumentException("Images are of different sizes");
         
         ulong sum = 0;
-        
         for (int i = 0; i < input.Width; i++)
         {
             for (int j = 0; j < input.Height; j++)
             {
-                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].R, output[i, j].R), 2);
-                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].G, output[i, j].G), 2);
-                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].B, output[i, j].B), 2);
+                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].R, output[i, j].R), 2) 
+                       + (ulong)Math.Pow(SubtractBytes(input[i, j].G, output[i, j].G), 2) 
+                       + (ulong)Math.Pow(SubtractBytes(input[i, j].B, output[i, j].B), 2);
             }
         }
         sum /= (ulong)(input.Width * input.Height * 3);
-        var square = Math.Sqrt(sum);
-
-        return square;
+        return Math.Sqrt(sum);;
     }
     public static double PeakMeanSquaredError(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
-        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException("Images are of different sizes");
+        if (input.Height != output.Height || input.Width != output.Width) 
+            throw new ArgumentException("Images are of different sizes");
         
-        var p = (int)(Math.Pow(2, input.PixelType.BitsPerPixel / 3) - 1);
-        return MeanSquaredError(ref input, ref output)/(Math.Pow(p, 2));
+        var p = GetMax(ref input);
+        return MeanSquaredError(ref input, ref output) / Math.Pow(p, 2);
     }
     public static double SignalToNoiseRatio(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
-        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException("Images are of different sizes");
+        if (input.Height != output.Height || input.Width != output.Width) 
+            throw new ArgumentException("Images are of different sizes");
 
         ulong summ = 0;
-
         for (int i = 0; i < input.Width; i++)
         {
             for (int j = 0; j < input.Height; j++)
             {
-                summ += (ulong)Math.Pow(output[i, j].R, 2) + (ulong)Math.Pow(output[i, j].G, 2) + (ulong)Math.Pow(output[i, j].B, 2);
+                summ += (ulong)Math.Pow(output[i, j].R, 2) 
+                        + (ulong)Math.Pow(output[i, j].G, 2) 
+                        + (ulong)Math.Pow(output[i, j].B, 2);
             }
         }
 
         ulong sum = 0;
-        
         for (int i = 0; i < input.Width; i++)
         {
             for (int j = 0; j < input.Height; j++)
             {
-                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].R, output[i, j].R), 2);
-                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].G, output[i, j].G), 2);
-                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].B, output[i, j].B), 2);
+                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].R, output[i, j].R), 2) 
+                       + (ulong)Math.Pow(SubtractBytes(input[i, j].G, output[i, j].G), 2) 
+                       + (ulong)Math.Pow(SubtractBytes(input[i, j].B, output[i, j].B), 2);
             }
         }
         
@@ -216,20 +222,17 @@ public static class Operations
     {
         if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException("Images are of different sizes");
         
-        ulong p = (ulong)(Math.Pow(2, input.PixelType.BitsPerPixel / 3) - 1);
-
+        ulong p = GetMax(ref input);
         ulong sum = 0;
-        
         for (int i = 0; i < input.Width; i++)
         {
             for (int j = 0; j < input.Height; j++)
             {
-                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].R, output[i, j].R), 2);
-                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].G, output[i, j].G), 2);
-                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].B, output[i, j].B), 2);
+                sum += (ulong)Math.Pow(SubtractBytes(input[i, j].R, output[i, j].R), 2)
+                       + (ulong)Math.Pow(SubtractBytes(input[i, j].G, output[i, j].G), 2) 
+                       + (ulong)Math.Pow(SubtractBytes(input[i, j].B, output[i, j].B), 2);
             }
         }
-        
         if (sum == 0) throw new DivideByZeroException();
 
         return 10 * Math.Log10((Math.Pow(p, 2) * input.Height * input.Width) / sum);
@@ -244,12 +247,11 @@ public static class Operations
         {
             for (int j = 0; j < input.Width; j++)
             {
-                var inp = ((input[i,j].R + input[i,j].G + input[i,j].B) / 3);
-                var outp = ((output[i,j].R + output[i,j].G + output[i,j].B) / 3);
+                var inp = (input[i,j].R + input[i,j].G + input[i,j].B) / 3;
+                var outp = (output[i,j].R + output[i,j].G + output[i,j].B) / 3;
                 difference.Add(inp - outp);
             }
         }
-
         return difference.Max();
     }
     #endregion
@@ -279,47 +281,51 @@ public static class Operations
     {
         return (byte)Math.Abs(input1 - input2);
     }
-    private static double MultiplyByte(byte input, double value)
-    {
-        var result = input * value;
-        return result;
-    }
     private static byte FlipByte(byte input)
     {
         return (byte)~input;
     }
     private static Rgb24 GetMidpoint(List<Rgb24> values)
     {
-        var pixel = new Rgb24
+        return new Rgb24
         {
             R = (byte)((values.Max(x => x.R) + values.Min(x => x.R)) / 2),
             G = (byte)((values.Max(x => x.G) + values.Min(x => x.G)) / 2),
             B = (byte)((values.Max(x => x.B) + values.Min(x => x.B)) / 2)
         };
-        return pixel;
     }
     private static Rgb24 GetArithmeticMean(List<Rgb24> values)
     {
-        var pixel = new Rgb24
+        return new Rgb24
         {
             R = (byte)(values.Sum(x => x.R) / values.Count),
             G = (byte)(values.Sum(x => x.G) / values.Count),
             B = (byte)(values.Sum(x => x.B) / values.Count)
         };
-        return pixel;
     }
-    private static List<Rgb24> GetSurrounding(Image<Rgb24> input, int i, int j)
+    private static List<Rgb24> GetSurrounding(Image<Rgb24> input, int i, int j, int change)
     {
         var surrounding = new List<Rgb24>();
-
-        for (int k = i - 1; k <= i + 1; k++)
+        for (int k = i - change; k <= i + change; k++)
         {
-            for (int l = j - 1; l <= j + 1; l++)
+            for (int l = j - change; l <= j + change; l++)
             {
                 surrounding.Add(input[k, l]);
             }
         }
         return surrounding;
+    }
+    private static byte GetMax(ref Image<Rgb24> input)
+    {
+        var values = new List<Rgb24>();
+        for (int i = 0; i < input.Width; i++)
+        {
+            for (int j = 0; j < input.Height; j++)
+            {
+                values.Add(input[i, j]);
+            }
+        }
+        return values.Max(x => (byte)((x.R + x.G + x.B) / 3));
     }
     #endregion
     

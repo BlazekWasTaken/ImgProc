@@ -37,8 +37,8 @@ static void RunOptions(Options opts)
             else if (opts.DiagonalFlip) output = Operations.DiagonalFlip(ref input);
             else if (opts.Shrink != 0) output = Operations.Shrink(ref input, opts.Shrink);
             else if (opts.Enlarge != 0) output = Operations.Enlarge(ref input, opts.Enlarge);
-            else if (opts.Midpoint) output = Operations.MidpointFilter(ref input);
-            else if (opts.Mean) output = Operations.ArithmeticMeanFilter(ref input);
+            else if (opts.Midpoint != 0) output = Operations.MidpointFilter(ref input, opts.Midpoint);
+            else if (opts.Mean != 0) output = Operations.ArithmeticMeanFilter(ref input, opts.Mean);
             else throw new ArgumentException("no options provided");
             
             output.SaveAsBmp(opts.Output);

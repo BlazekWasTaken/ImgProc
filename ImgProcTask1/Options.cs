@@ -5,16 +5,16 @@ namespace ImgProcTask1;
 public class Options
 {
     [Option(longName: "input", Required = true, HelpText = "Input file.")]
-    public string Input { get; set; }
+    public required string Input { get; set; }
     
     [Option(longName: "output", Required = true, HelpText = "Output file.")]
-    public string Output { get; set; }
+    public required string Output { get; set; }
     
     #region Elementary operations (B)
-    [Option(longName: "brightness", Required = false, HelpText = "Brightness value.")]
+    [Option(longName: "brightness", Required = false, HelpText = "Brightness change value.")]
     public int Brightness { get; set; }
     
-    [Option(longName: "contrast", Required = false, HelpText = "Contrast value.")]
+    [Option(longName: "contrast", Required = false, HelpText = "Contrast change value.")]
     public double Contrast { get; set; }
     
     [Option(longName: "negative", Required = false, HelpText = "Negative.", Default = false)]
@@ -39,11 +39,11 @@ public class Options
     #endregion
 
     #region Noise removal (N)
-    [Option(longName: "mid", Required = false, HelpText = "Midpoint filter noise removal.", Default = false)]
-    public bool Midpoint { get; set; }
+    [Option(longName: "mid", Required = false, HelpText = "Window size for midpoint filter noise removal.")]
+    public int Midpoint { get; set; }
     
-    [Option(longName: "amean", Required = false, HelpText = "Arithmetic mean filter noise removal.", Default = false)]
-    public bool Mean { get; set; }
+    [Option(longName: "amean", Required = false, HelpText = "Window size for arithmetic mean filter noise removal.")]
+    public int Mean { get; set; }
     #endregion
 
     #region Analysis (E)
