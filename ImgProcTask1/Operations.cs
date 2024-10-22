@@ -139,7 +139,7 @@ public static class Operations
         {
             for (int j = change; j < input.Height - change; j++)
             {
-                output[i, j] = GetMidpoint(GetSurrounding(input, i, j, change));
+                output[i, j] = GetMidpoint(GetSurrounding(ref input, i, j, change));
             }
         }
         return output;
@@ -154,7 +154,7 @@ public static class Operations
         {
             for (int j = change; j < input.Height - change; j++)
             {
-                output[i, j] = GetArithmeticMean(GetSurrounding(input, i, j, change));
+                output[i, j] = GetArithmeticMean(GetSurrounding(ref input, i, j, change));
             }
         }
         return output;
@@ -220,7 +220,8 @@ public static class Operations
     }
     public static double PeakSignalToNoiseRatio(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
-        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException("Images are of different sizes");
+        if (input.Height != output.Height || input.Width != output.Width) 
+            throw new ArgumentException("Images are of different sizes");
         
         ulong p = GetMax(ref input);
         ulong sum = 0;
@@ -235,11 +236,12 @@ public static class Operations
         }
         if (sum == 0) throw new DivideByZeroException();
 
-        return 10 * Math.Log10((Math.Pow(p, 2) * input.Height * input.Width) / sum);
+        return 10 * Math.Log10(Math.Pow(p, 2) * input.Height * input.Width / sum);
     }
     public static int MaximumDifference(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
-        if (input.Height != output.Height || input.Width != output.Width) throw new ArgumentException("Images are of different sizes");
+        if (input.Height != output.Height || input.Width != output.Width) 
+            throw new ArgumentException("Images are of different sizes");
         
         List<int> difference = []; 
 
@@ -303,7 +305,7 @@ public static class Operations
             B = (byte)(values.Sum(x => x.B) / values.Count)
         };
     }
-    private static List<Rgb24> GetSurrounding(Image<Rgb24> input, int i, int j, int change)
+    private static List<Rgb24> GetSurrounding(ref Image<Rgb24> input, int i, int j, int change)
     {
         var surrounding = new List<Rgb24>();
         for (int k = i - change; k <= i + change; k++)
