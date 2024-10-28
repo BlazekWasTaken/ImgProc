@@ -178,7 +178,7 @@ public static class Operations
             }
         }
         sum /= (ulong)(input.Width * input.Height * 3);
-        return Math.Sqrt(sum);;
+        return sum;
     }
     public static double PeakMeanSquaredError(ref Image<Rgb24> input, ref Image<Rgb24> output)
     {
