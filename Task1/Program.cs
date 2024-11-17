@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using CommandLine;
-using ImgProcTask1;
+using Task1;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 

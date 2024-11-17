@@ -1,6 +1,6 @@
 using CommandLine;
 
-namespace ImgProcTask1;
+namespace Task1;
 
 public class Options
 {

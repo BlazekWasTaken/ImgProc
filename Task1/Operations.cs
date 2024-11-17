@@ -1,7 +1,7 @@
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace ImgProcTask1;
+namespace Task1;
 
 public static class Operations
 {
