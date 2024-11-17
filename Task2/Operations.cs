@@ -6,7 +6,6 @@ namespace Task2;
 public static class Operations
 {
     #region histogram
-
     private static Dictionary<int, int> HistogramData(ref Image<L8> input)
     {
         var values = Enumerable.Range(0, 256).ToDictionary(i => i, i => 0);
@@ -24,7 +23,6 @@ public static class Operations
         });
         return values;
     }
-
     public static Image<L8> Histogram(ref Image<L8> input)
     {
         var output = new Image<L8>(256, 256, new L8(255));
@@ -40,11 +38,9 @@ public static class Operations
         }
         return output;
     }
-
     #endregion
     
     #region image quality improvement
-    
     // (H5) Hyperbolic final probability density function (--hhyper).
     public static Image<L8> Hyperbolic(ref Image<L8> input, byte min, byte max)
     {
@@ -64,21 +60,14 @@ public static class Operations
                     ref var outputPixel = ref outputRow[x];
                     
                     var n = inputAccessor.Height * inputAccessor.Width;
-
-                    long sum = 0;
-                    for (int i = 0; i <= inputPixel.PackedValue; i++)
-                    {
-                        sum += values[i];
-                    }
+                    long sum = values.Take(inputPixel.PackedValue + 1).Sum(kv => kv.Value);
                     var newValue = Convert.ToByte(min * Math.Pow((float)max / min, 1.0 / n * sum));
                     outputPixel = new L8(newValue);
                 }
             }
         });
-        
         return output;
     }
-    
     #endregion
     
     #region image characteristics
@@ -93,9 +82,27 @@ public static class Operations
     #endregion
     
     #region linear filtration in spatial domain
-    
     // (S6) Line identification (--slineid).
-    
+    public static Image<L8> LineIdentification(ref Image<L8> input)
+    {
+        var output = new Image<L8>(input.Width, input.Height);
+
+        for (int i = 0; i < input.Width; i++)
+        {
+            for (int j = 0; j < input.Height; j++)
+            {
+                if (i == 0 || j == 0 || i == input.Width - 1 || j == input.Height - 1) output[i, j] = input[i, j];
+                else
+                {
+                    var value = input[i - 1, j - 1].PackedValue * -1 + input[i, j - 1].PackedValue * 2 + input[i + 1, j - 1].PackedValue * -1 +
+                                input[i - 1, j].PackedValue * -1 + input[i, j].PackedValue * 2 + input[i + 1, j].PackedValue * -1 + 
+                                input[i - 1, j + 1].PackedValue * -1 + input[i, j + 1].PackedValue * 2 + input[i + 1, j + 1].PackedValue * -1;
+                    output[i, j] = new L8(value.ToByte());
+                }
+            }
+        }
+        return output;
+    }
     #endregion
     
     #region non-linear filtration in spatial domain
@@ -103,4 +110,14 @@ public static class Operations
     // (O2) Roberts operator (--orobertsii).
     
     #endregion
+
+    private static byte ToByte(this int value)
+    {
+        return value switch
+        {
+            < byte.MinValue => 0,
+            > byte.MaxValue => byte.MaxValue,
+            _ => (byte)value
+        };
+    }
 }

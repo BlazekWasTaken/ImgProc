@@ -34,6 +34,11 @@ static void RunOptions(Options opts)
             var path = values[0].Split('.');
             output.SaveAsBmp($"{path[0]}_{min}_{max}.{path[1]}");
         }
+        if (!string.IsNullOrEmpty(opts.LineIdentification))
+        {
+            output = Operations.LineIdentification(ref input);
+            output.SaveAsBmp(opts.LineIdentification);
+        }
         
         s.Stop();
         Console.WriteLine("Time: " + s.ElapsedMilliseconds + "ms");
