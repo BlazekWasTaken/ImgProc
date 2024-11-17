@@ -39,6 +39,18 @@ static void RunOptions(Options opts)
             output = Operations.LineIdentification(ref input);
             output.SaveAsBmp(opts.LineIdentification);
         }
+        if (opts.Mean)
+        {
+            Console.WriteLine("Mean: " + Operations.Mean(ref input));
+        }
+        if (opts.Variance)
+        {
+            Console.WriteLine("Variance: " + Operations.Variance(ref input));
+        }
+        if (opts.FlatteningCoefficient)
+        {
+            Console.WriteLine("Flattening coefficient: " + Operations.FlatteningCoefficient(ref input));
+        }
         
         s.Stop();
         Console.WriteLine("Time: " + s.ElapsedMilliseconds + "ms");

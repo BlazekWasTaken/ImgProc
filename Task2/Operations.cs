@@ -71,14 +71,45 @@ public static class Operations
     #endregion
     
     #region image characteristics
-    
     // (C1) Mean (--cmean). Variance (--cvariance).
+    public static double Mean(ref Image<L8> input)
+    {
+        var result = 0.0;
+        var values = HistogramData(ref input);
+        for (int i = 0; i < values.Keys.Count; i++)
+        {
+            result += i * values[i];
+        }
+        return result / (input.Width * input.Height);
+    }
+    public static double Variance(ref Image<L8> input)
+    {
+        var mean = Mean(ref input);
+        var result = 0.0;
+        var values = HistogramData(ref input);
+        for (int i = 0; i < values.Keys.Count; i++)
+        {
+            result += Math.Pow(i - mean, 2) * values[i];
+        }
+        return result / (input.Width * input.Height);
+    }
     // (C2) Standard deviation (--cstdev). Variation coefficient I (--cvarcoi).
     // (C3) Asymmetry coefficient (--casyco).
     // (C4) Flattening coefficient (--casyco).
+    public static double FlatteningCoefficient(ref Image<L8> input)
+    {
+        var mean = Mean(ref input);
+        var variance = Variance(ref input);
+        var values = HistogramData(ref input);
+        var result = 0.0;
+        for (int i = 0; i < values.Keys.Count; i++)
+        {
+            result += Math.Pow(i - mean, 4) * values[i] - 3;
+        }
+        return result / (input.Width * input.Height) / Math.Pow(variance, 2);
+    }
     // (C5) Variation coefficient II (--cvarcoii).
     // (C6) Information source entropy (--centropy).
-    
     #endregion
     
     #region linear filtration in spatial domain
