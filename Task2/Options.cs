@@ -7,14 +7,14 @@ public class Options
     [Option(longName: "input", Required = true, HelpText = "Input file.")]
     public required string Input { get; set; }
     
-    [Option(longName: "histogram", Required = true, HelpText = "Output file.")]
-    public required string Histogram { get; set; }
+    [Option(longName: "histogram", Required = false, HelpText = "Output file.")]
+    public string? Histogram { get; set; }
     
     #region image quality improvement
     
     
-    [Option(longName: "hhyper", Required = false, HelpText = "Hyperbolic final probability density function.")]
-    public bool Hyper { get; set; }
+    [Option(longName: "hhyper", Required = false, HelpText = "Hyperbolic final probability density function. Format: path,min,max.")]
+    public string? Hyper { get; set; }
     
     #endregion
     

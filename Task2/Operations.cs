@@ -7,43 +7,36 @@ public static class Operations
 {
     #region histogram
 
-    private static Dictionary<int, int> HistogramData(Image<L8> input)
+    private static Dictionary<int, int> HistogramData(ref Image<L8> input)
     {
         var values = Enumerable.Range(0, 256).ToDictionary(i => i, i => 0);
-        
-        if (System.Diagnostics.Debugger.IsAttached)
+        input.ProcessPixelRows(accessor =>
         {
-            for (int i = 0; i < input.Width; i++)
+            for (int y = 0; y < accessor.Height; y++)
             {
-                for (int j = 0; j < input.Height; j++)
+                var row = accessor.GetRowSpan(y);
+                for (int x = 0; x < accessor.Width; x++)
                 {
-                    values[input[i, j].PackedValue]++;
+                    ref L8 pixel = ref row[x];
+                    values[pixel.PackedValue]++;
                 }
             }
-        }
-        else
-        {
-            Parallel.For(0, input.Width, i =>
-            {
-                Parallel.For(0, input.Height, j =>
-                {
-                    values[input[i, j].PackedValue]++;
-                });
-            });
-        }
+        });
         return values;
     }
 
     public static Image<L8> Histogram(ref Image<L8> input)
     {
         var output = new Image<L8>(256, 256, new L8(255));
-        var values = HistogramData(input);
-        var max = values.Values.Max();
-        var factor = max / output.Height + 1;
+        var values = HistogramData(ref input);
+        var factor = values.Values.Max() / output.Height + 1;
         for (int i = 0; i < output.Width; i++)
         {
             var height = Convert.ToByte(values[i] / factor);
-            output[i, 255 - height] = new L8(0);
+            for (int j = 255 - height; j < 256; j++)
+            {
+                output[i, j] = new L8(0);
+            }
         }
         return output;
     }
@@ -53,6 +46,38 @@ public static class Operations
     #region image quality improvement
     
     // (H5) Hyperbolic final probability density function (--hhyper).
+    public static Image<L8> Hyperbolic(ref Image<L8> input, byte min, byte max)
+    {
+        var output = new Image<L8>(input.Width, input.Height);
+        var values = HistogramData(ref input);
+        
+        input.ProcessPixelRows(output, (inputAccessor, outputAccessor) =>
+        {
+            for (int y = 0; y < inputAccessor.Height; y++)
+            {
+                var inputRow = inputAccessor.GetRowSpan(y);
+                var outputRow = outputAccessor.GetRowSpan(y);
+
+                for (int x = 0; x < inputRow.Length; x++)
+                {
+                    ref var inputPixel = ref inputRow[x];
+                    ref var outputPixel = ref outputRow[x];
+                    
+                    var n = inputAccessor.Height * inputAccessor.Width;
+
+                    long sum = 0;
+                    for (int i = 0; i <= inputPixel.PackedValue; i++)
+                    {
+                        sum += values[i];
+                    }
+                    var newValue = Convert.ToByte(min * Math.Pow((float)max / min, 1.0 / n * sum));
+                    outputPixel = new L8(newValue);
+                }
+            }
+        });
+        
+        return output;
+    }
     
     #endregion
     
