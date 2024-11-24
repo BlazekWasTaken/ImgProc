@@ -94,8 +94,31 @@ public static class Operations
         return result / (input.Width * input.Height);
     }
     // (C2) Standard deviation (--cstdev). Variation coefficient I (--cvarcoi).
+    public static double StandardDeviation(ref Image<L8> input)
+    {
+        return Math.Sqrt(Variance(ref input));
+    }
+
+    public static double VariationCoefficient(ref Image<L8> input)
+    {
+        return StandardDeviation(ref input)/Mean(ref input);
+    }
+
     // (C3) Asymmetry coefficient (--casyco).
-    // (C4) Flattening coefficient (--casyco).
+    public static double AsymmetryCoefficient(ref Image<L8> input)
+    {
+        var a = (Math.Pow(StandardDeviation(ref input), 3));
+        var mean = Mean(ref input);
+        var result = 0.0;
+        var values = HistogramData(ref input);
+        for (int i = 0; i < values.Keys.Count; i++)
+        {
+            result += Math.Pow(i - mean, 2) * values[i];
+        }
+        return result / (input.Width * input.Height * a);
+    }
+
+    // (C4) Flattening coefficient (--cflaco).
     public static double FlatteningCoefficient(ref Image<L8> input)
     {
         var mean = Mean(ref input);
@@ -109,7 +132,32 @@ public static class Operations
         return result / (input.Width * input.Height) / Math.Pow(variance, 2);
     }
     // (C5) Variation coefficient II (--cvarcoii).
+    public static double VariationCoefficient2(ref Image<L8> input)
+    {
+        var a = 0.0;
+        var values = HistogramData(ref input);
+        for (int i = 0; i < values.Keys.Count; i++)
+        {
+            a += Math.Pow(values[i], 2);
+        }
+        return Math.Pow((1.0 / (input.Width * input.Height)),2) * a;
+    }
+    
     // (C6) Information source entropy (--centropy).
+    public static double InformationSourceEntropy(ref Image<L8> input)
+    {
+        var a = 0.0;
+        var n = 1.0 * input.Width * input.Height;
+        var values = HistogramData(ref input);
+        for (int i = 0; i < values.Keys.Count; i++)
+        {
+            if (values[i] == 0) continue;
+            var temp = values[i] * Math.Log2(values[i]/n);
+            a += temp;
+        }
+        return (-1.0 / n) * a;
+    }
+    
     #endregion
     
     #region linear filtration in spatial domain
@@ -139,6 +187,19 @@ public static class Operations
     #region non-linear filtration in spatial domain
     
     // (O2) Roberts operator (--orobertsii).
+    public static Image<L8> RobertsOperatorIi(ref Image<L8> input)
+    {
+        var output = new Image<L8>(input.Width, input.Height);
+        for (int i = 0; i < input.Width - 1; i++)
+        {
+            for (int j = 0; j < input.Height - 1; j++)
+            {
+                output[i, j] = new L8( (Math.Abs(input[i, j].PackedValue - input[i + 1, j].PackedValue)+
+                                        Math.Abs(input[i, j + 1].PackedValue - input[i + 1, j].PackedValue)).ToByte());
+            }
+        }
+        return output;
+    }
     
     #endregion
 

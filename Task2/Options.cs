@@ -45,6 +45,6 @@ public class Options
     
     #region non-linear filtration in spatial domain
     [Option(longName: "orobertsii", Required = false, HelpText = "Roberts operator.")]
-    public bool RobertsOperator { get; set; }
+    public string? RobertsOperator { get; set; }
     #endregion
 }

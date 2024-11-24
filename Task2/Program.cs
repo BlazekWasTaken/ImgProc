@@ -39,6 +39,12 @@ static void RunOptions(Options opts)
             output = Operations.LineIdentification(ref input);
             output.SaveAsBmp(opts.LineIdentification);
         }
+
+        if (!string.IsNullOrEmpty(opts.RobertsOperator))
+        {
+            output = Operations.RobertsOperatorIi(ref input);
+            output.SaveAsBmp(opts.RobertsOperator);
+        }
         if (opts.Mean)
         {
             Console.WriteLine("Mean: " + Operations.Mean(ref input));
@@ -50,6 +56,31 @@ static void RunOptions(Options opts)
         if (opts.FlatteningCoefficient)
         {
             Console.WriteLine("Flattening coefficient: " + Operations.FlatteningCoefficient(ref input));
+        }
+
+        if (opts.AsymmetryCoefficient)
+        {
+            Console.WriteLine("Asymmetry coefficient: " + Operations.AsymmetryCoefficient(ref input));
+        }
+
+        if (opts.StandardDeviation)
+        {
+            Console.WriteLine("Standard deviation: " + Operations.StandardDeviation(ref input));
+        }
+
+        if (opts.InformationSourceEntropy)
+        {
+            Console.WriteLine("Information source entropy: " + Operations.InformationSourceEntropy(ref input));
+        }
+
+        if (opts.VariationCoefficient2)
+        {
+            Console.WriteLine("Variation coefficient 2: " + Operations.VariationCoefficient2(ref input));
+        }
+
+        if (opts.VariationCoefficient1)
+        {
+            Console.WriteLine("Variation coefficient 1: " + Operations.VariationCoefficient(ref input));
         }
         
         s.Stop();
