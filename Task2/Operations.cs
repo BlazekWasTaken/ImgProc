@@ -214,14 +214,12 @@ public static class Operations
     // (O2) Roberts operator II (--orobertsii) optimized implementation.
     public static Image<L8> RobertsOperatorIi(Image<L8> input)
     {
-        var output = new Image<L8>(input.Width, input.Height);
-        var black = new L8(0);
-        Parallel.For(0, input.Width, i =>
+        var output = new Image<L8>(input.Width, input.Height, new L8(0));
+        Parallel.For(0, input.Width - 1, i =>
         {
-            Parallel.For(0, input.Height, j =>
-            {
-                if (i == input.Width || j == input.Height) output[i, j] = black;
-                output[i, j] = new L8((Math.Abs(input[i, j].PackedValue - input[i + 1, j].PackedValue) +
+            Parallel.For(0, input.Height - 1, j =>
+            { 
+                output[i, j] = new L8((Math.Abs(input[i, j].PackedValue - input[i + 1, j].PackedValue) + 
                                        Math.Abs(input[i, j + 1].PackedValue - input[i + 1, j].PackedValue)).ToByte());
             });
         });
