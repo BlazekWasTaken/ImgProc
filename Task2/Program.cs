@@ -56,8 +56,16 @@ static void RunOptions(Options opts)
 
         if (!string.IsNullOrEmpty(opts.RobertsOperator))
         {
-            output = Operations.RobertsOperatorIi(input);
-            output.SaveAsBmp(opts.RobertsOperator);
+            var values = opts.RobertsOperator.Split(',');
+            if (values.Length != 2) throw new Exception("Invalid parameter format.");
+            var variantString = values[1];
+            if (!variantString.Equals("initial") && !variantString.Equals("improved")) throw new Exception("Invalid variant.");
+            
+            output = variantString.Equals("initial") ? 
+                Operations.RobertsOperatorIiInitial(ref input) : 
+                Operations.RobertsOperatorIi(input);
+            var path = values[0].Split(".");
+            output.SaveAsBmp($"{path[0]}_{variantString}.{path[1]}");
         }
         if (opts.Mean)
         {
