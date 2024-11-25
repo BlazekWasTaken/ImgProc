@@ -36,8 +36,22 @@ static void RunOptions(Options opts)
         }
         if (!string.IsNullOrEmpty(opts.LineIdentification))
         {
-            output = Operations.LineIdentification(ref input);
-            output.SaveAsBmp(opts.LineIdentification);
+            var values = opts.LineIdentification.Split(',');
+            if (values.Length != 2) throw new Exception("Invalid parameter format.");
+            var variantString = values[1];
+            if (variantString.Equals("improved"))
+            {
+                output = Operations.LineIdentificationImproved(ref input);
+            }
+            else
+            {
+                var variant = int.Parse(values[1]);
+                if (variant is < 1 or > 4) throw new Exception("Invalid variant.");
+                output = Operations.LineIdentification(ref input, variant);
+                
+            }
+            var path = values[0].Split('.');
+            output.SaveAsBmp($"{path[0]}_{variantString}.{path[1]}");
         }
 
         if (!string.IsNullOrEmpty(opts.RobertsOperator))

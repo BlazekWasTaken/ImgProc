@@ -39,7 +39,7 @@ public class Options
     #endregion
     
     #region linear filtration in spatial domain
-    [Option(longName: "slineid", Required = false, HelpText = "Line identification. Format: path.")]
+    [Option(longName: "slineid", Required = false, HelpText = "Line identification. Format: path,variant. Variants: 1, 2, 3, 4, improved.")]
     public string? LineIdentification { get; set; }
     #endregion
     

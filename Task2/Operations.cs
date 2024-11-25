@@ -163,7 +163,7 @@ public static class Operations
     
     #region linear filtration in spatial domain
     // (S6) Line identification (--slineid).
-    public static Image<L8> LineIdentification(ref Image<L8> input)
+    public static Image<L8> LineIdentification(ref Image<L8> input, int variant)
     {
         var output = new Image<L8>(input.Width, input.Height);
 
@@ -171,16 +171,65 @@ public static class Operations
         {
             for (int j = 0; j < input.Height; j++)
             {
-                if (i == 0 || j == 0 || i == input.Width - 1 || j == input.Height - 1) output[i, j] = input[i, j];
+                if (i == 0 || j == 0 || i == input.Width - 1 || j == input.Height - 1) output[i, j] = new L8(0);
                 else
                 {
-                    var value = input[i - 1, j - 1].PackedValue * -1 + input[i, j - 1].PackedValue * 2 + input[i + 1, j - 1].PackedValue * -1 +
-                                input[i - 1, j].PackedValue * -1 + input[i, j].PackedValue * 2 + input[i + 1, j].PackedValue * -1 + 
-                                input[i - 1, j + 1].PackedValue * -1 + input[i, j + 1].PackedValue * 2 + input[i + 1, j + 1].PackedValue * -1;
+                    var value = variant switch
+                    {
+                        1 => // vertical
+                            input[i - 1, j - 1].PackedValue * -1 + input[i, j - 1].PackedValue * 2 + input[i + 1, j - 1].PackedValue * -1 +
+                            input[i - 1, j].PackedValue * -1 + input[i, j].PackedValue * 2 + input[i + 1, j].PackedValue * -1 +
+                            input[i - 1, j + 1].PackedValue * -1 + input[i, j + 1].PackedValue * 2 + input[i + 1, j + 1].PackedValue * -1,
+                        2 => // horizontal
+                            input[i - 1, j - 1].PackedValue * -1 + input[i, j - 1].PackedValue * -1 +
+                            input[i + 1, j - 1].PackedValue * -1 +
+                            input[i - 1, j].PackedValue * 2 + input[i, j].PackedValue * 2 +
+                            input[i + 1, j].PackedValue * 2 +
+                            input[i - 1, j + 1].PackedValue * -1 + input[i, j + 1].PackedValue * -1 +
+                            input[i + 1, j + 1].PackedValue * -1,
+                        3 => // diagonal 45
+                            input[i - 1, j - 1].PackedValue * -1 + input[i, j - 1].PackedValue * -1 + input[i + 1, j - 1].PackedValue * 2 +
+                            input[i - 1, j].PackedValue * -1 + input[i, j].PackedValue * 2 + input[i + 1, j].PackedValue * -1 +
+                            input[i - 1, j + 1].PackedValue * 2 + input[i, j + 1].PackedValue * -1 + input[i + 1, j + 1].PackedValue * -1,
+                        4 => // diagonal 135
+                            input[i - 1, j - 1].PackedValue * 2 + input[i, j - 1].PackedValue * -1 +
+                            input[i + 1, j - 1].PackedValue * -1 +
+                            input[i - 1, j].PackedValue * -1 + input[i, j].PackedValue * 2 +
+                            input[i + 1, j].PackedValue * -1 +
+                            input[i - 1, j + 1].PackedValue * -1 + input[i, j + 1].PackedValue * -1 +
+                            input[i + 1, j + 1].PackedValue * 2,
+                        _ => 0
+                    };
+
                     output[i, j] = new L8(value.ToByte());
                 }
             }
         }
+        return output;
+    }
+    
+    public static Image<L8> LineIdentificationImproved(ref Image<L8> input)
+    {
+        var output = new Image<L8>(input.Width, input.Height, new L8(0));
+        
+        input.ProcessPixelRows(output, (inputAccessor, outputAccessor) =>
+        {
+            for (int y = 1; y < inputAccessor.Height - 1; y++)
+            {
+                var inputRowHigh = inputAccessor.GetRowSpan(y - 1);
+                var inputRow = inputAccessor.GetRowSpan(y);
+                var inputRowLow = inputAccessor.GetRowSpan(y + 1);
+                var outputRow = outputAccessor.GetRowSpan(y);
+
+                for (int x = 1; x < inputRow.Length - 1; x++)
+                {
+                    var value = inputRowHigh[x - 1].PackedValue * -1 + inputRowHigh[x].PackedValue * -1 + inputRowHigh[x + 1].PackedValue * 2 +
+                                inputRow[x - 1].PackedValue * -1 + inputRow[x].PackedValue * 2 + inputRow[x + 1].PackedValue * -1 +
+                                inputRowLow[x - 1].PackedValue * 2 + inputRowLow[x].PackedValue * -1 + inputRowLow[x + 1].PackedValue * -1;
+                    outputRow[x].PackedValue = value.ToByte();
+                }
+            }
+        });
         return output;
     }
     #endregion
