@@ -1,5 +1,6 @@
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace Task2;
 
@@ -186,8 +187,8 @@ public static class Operations
     
     #region non-linear filtration in spatial domain
     
-    // (O2) Roberts operator (--orobertsii).
-    public static Image<L8> RobertsOperatorIi(ref Image<L8> input)
+    // (O2) Roberts operator II (--orobertsii) initial implementation.
+    public static Image<L8> RobertsOperatorIiInitial(ref Image<L8> input)
     {
         var output = new Image<L8>(input.Width, input.Height);
         for (int i = 0; i < input.Width - 1; i++)
@@ -198,9 +199,34 @@ public static class Operations
                                         Math.Abs(input[i, j + 1].PackedValue - input[i + 1, j].PackedValue)).ToByte());
             }
         }
+
+        for (int i = 0; i < input.Width; i++)
+        {
+            output[i, input.Height] = new L8(0);
+        }
+
+        for (int i = 0; i < input.Height; i++)
+        {
+            output[input.Width, i] = new L8(0);
+        }
         return output;
     }
-    
+    // (O2) Roberts operator II (--orobertsii) optimized implementation.
+    public static Image<L8> RobertsOperatorIi(Image<L8> input)
+    {
+        var output = new Image<L8>(input.Width, input.Height);
+        var black = new L8(0);
+        Parallel.For(0, input.Width, i =>
+        {
+            Parallel.For(0, input.Height, j =>
+            {
+                if (i == input.Width || j == input.Height) output[i, j] = black;
+                output[i, j] = new L8((Math.Abs(input[i, j].PackedValue - input[i + 1, j].PackedValue) +
+                                       Math.Abs(input[i, j + 1].PackedValue - input[i + 1, j].PackedValue)).ToByte());
+            });
+        });
+        return output;
+    }
     #endregion
 
     private static byte ToByte(this int value)

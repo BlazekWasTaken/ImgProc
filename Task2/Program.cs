@@ -42,7 +42,7 @@ static void RunOptions(Options opts)
 
         if (!string.IsNullOrEmpty(opts.RobertsOperator))
         {
-            output = Operations.RobertsOperatorIi(ref input);
+            output = Operations.RobertsOperatorIi(input);
             output.SaveAsBmp(opts.RobertsOperator);
         }
         if (opts.Mean)
