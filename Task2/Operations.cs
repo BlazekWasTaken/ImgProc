@@ -171,15 +171,18 @@ public static class Operations
         {
             for (int j = 0; j < input.Height; j++)
             {
-                if (i == 0 || j == 0 || i == input.Width - 1 || j == input.Height - 1) output[i, j] = new L8(0);
+                if (i == 0 || j == 0 || i == input.Width - 1 || j == input.Height - 1) output[i, j] = input[i, j];
                 else
                 {
                     var value = variant switch
                     {
                         1 => // vertical
-                            input[i - 1, j - 1].PackedValue * -1 + input[i, j - 1].PackedValue * 2 + input[i + 1, j - 1].PackedValue * -1 +
-                            input[i - 1, j].PackedValue * -1 + input[i, j].PackedValue * 2 + input[i + 1, j].PackedValue * -1 +
-                            input[i - 1, j + 1].PackedValue * -1 + input[i, j + 1].PackedValue * 2 + input[i + 1, j + 1].PackedValue * -1,
+                            input[i - 1, j - 1].PackedValue * -1 + input[i, j - 1].PackedValue * 2 +
+                            input[i + 1, j - 1].PackedValue * -1 +
+                            input[i - 1, j].PackedValue * -1 + input[i, j].PackedValue * 2 +
+                            input[i + 1, j].PackedValue * -1 +
+                            input[i - 1, j + 1].PackedValue * -1 + input[i, j + 1].PackedValue * 2 +
+                            input[i + 1, j + 1].PackedValue * -1,
                         2 => // horizontal
                             input[i - 1, j - 1].PackedValue * -1 + input[i, j - 1].PackedValue * -1 +
                             input[i + 1, j - 1].PackedValue * -1 +
@@ -188,9 +191,12 @@ public static class Operations
                             input[i - 1, j + 1].PackedValue * -1 + input[i, j + 1].PackedValue * -1 +
                             input[i + 1, j + 1].PackedValue * -1,
                         3 => // diagonal 45
-                            input[i - 1, j - 1].PackedValue * -1 + input[i, j - 1].PackedValue * -1 + input[i + 1, j - 1].PackedValue * 2 +
-                            input[i - 1, j].PackedValue * -1 + input[i, j].PackedValue * 2 + input[i + 1, j].PackedValue * -1 +
-                            input[i - 1, j + 1].PackedValue * 2 + input[i, j + 1].PackedValue * -1 + input[i + 1, j + 1].PackedValue * -1,
+                            input[i - 1, j - 1].PackedValue * -1 + input[i, j - 1].PackedValue * -1 +
+                            input[i + 1, j - 1].PackedValue * 2 +
+                            input[i - 1, j].PackedValue * -1 + input[i, j].PackedValue * 2 +
+                            input[i + 1, j].PackedValue * -1 +
+                            input[i - 1, j + 1].PackedValue * 2 + input[i, j + 1].PackedValue * -1 +
+                            input[i + 1, j + 1].PackedValue * -1,
                         4 => // diagonal 135
                             input[i - 1, j - 1].PackedValue * 2 + input[i, j - 1].PackedValue * -1 +
                             input[i + 1, j - 1].PackedValue * -1 +
