@@ -30,7 +30,7 @@ public static class Operations
         var values = HistogramData(ref input);
         var factor = values.Values.Max() / output.Height + 1;
         for (int i = 0; i < output.Width; i++)
-        {
+        {   
             var height = Convert.ToByte(values[i] / factor);
             for (int j = 255 - height; j < 256; j++)
             {
@@ -45,6 +45,9 @@ public static class Operations
     // (H5) Hyperbolic final probability density function (--hhyper).
     public static Image<L8> Hyperbolic(ref Image<L8> input, byte min, byte max)
     {
+        if (min >= max) throw new Exception("Min has to be smaller than max.");
+        if (min == 0) throw new Exception("Min has to be greater than 0.");
+        
         var output = new Image<L8>(input.Width, input.Height);
         var values = HistogramData(ref input);
         
@@ -245,7 +248,7 @@ public static class Operations
     // (O2) Roberts operator II (--orobertsii) initial implementation.
     public static Image<L8> RobertsOperatorIiInitial(ref Image<L8> input)
     {
-        var output = new Image<L8>(input.Width, input.Height);
+        var output = new Image<L8>(input.Width, input.Height, new L8(0));
         for (int i = 0; i < input.Width - 1; i++)
         {
             for (int j = 0; j < input.Height - 1; j++)
@@ -253,16 +256,6 @@ public static class Operations
                 output[i, j] = new L8( (Math.Abs(input[i, j].PackedValue - input[i + 1, j].PackedValue)+
                                         Math.Abs(input[i, j + 1].PackedValue - input[i + 1, j].PackedValue)).ToByte());
             }
-        }
-
-        for (int i = 0; i < input.Width; i++)
-        {
-            output[i, input.Height] = new L8(0);
-        }
-
-        for (int i = 0; i < input.Height; i++)
-        {
-            output[input.Width, i] = new L8(0);
         }
         return output;
     }
