@@ -12,17 +12,16 @@ public class Options
     [Option(longName: "dilation", Required = false, HelpText = "Dilation")]
     public string? Dilation { get; set; }
     
-    //erosion
     [Option(longName: "erosion", Required = false, HelpText = "Erosion")]
     public string? Erosion { get; set; }
-    //opening
+    
     [Option(longName: "opening", Required = false, HelpText = "Opening")]
     public string? Opening { get; set; }
-    //closing
+    
     [Option(longName: "closing", Required = false, HelpText = "Closing")]
     public string? Closing { get; set; }
-    //HMT transformation
-    [Option(longName: "HMT transformation", Required = false, HelpText = "HMT transformation")]
+    
+    [Option(longName: "hmt-transformation", Required = false, HelpText = "HMT transformation")]
     public string? HmtTransformation { get; set; }
     #endregion
     
