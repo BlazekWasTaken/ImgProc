@@ -41,6 +41,48 @@ static void RunOptions(Options opts)
             output = Operations.Erode(ref input, structuringElement);
             output.SaveAsBmp(opts.Erosion);
         }
+
+        if (!string.IsNullOrEmpty(opts.Opening))
+        {
+            var structuringElement = new int[3, 3]
+            {
+                { 1, 1, 1 },
+                { 1, 0, 1 },
+                { 1, 1, 1 }
+            };
+            output = Operations.Open(ref input, structuringElement);
+            output.SaveAsBmp(opts.Opening);
+        }
+        
+        if (!string.IsNullOrEmpty(opts.Closing))
+        {
+            var structuringElement = new int[3, 3]
+            {
+                { 1, 1, 1 },
+                { 1, 0, 1 },
+                { 1, 1, 1 }
+            };
+            output = Operations.Close(ref input, structuringElement);
+            output.SaveAsBmp(opts.Closing);
+        }
+
+        if (!string.IsNullOrEmpty(opts.HmtTransformation))
+        {
+            var structuringElement1 = new int[3, 3]
+            {
+                { 1, -1, -1 },
+                { 1, 0, -1 },
+                { 1, -1, -1 }
+            };
+            var structuringElement2 = new int[3, 3]
+            {
+                { 0, -1, -1 },
+                { 0, 1, -1 },
+                { 0, -1, -1 }
+            };
+            output = Operations.HmtTransformation(ref input, structuringElement1, structuringElement2);
+            output.SaveAsBmp(opts.HmtTransformation);
+        }
         
         s.Stop();
         Console.WriteLine("Time: " + s.ElapsedMilliseconds + "ms");

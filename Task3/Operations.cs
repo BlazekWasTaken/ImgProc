@@ -1,3 +1,4 @@
+using System.Xml;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -88,6 +89,39 @@ public static class Operations
 
         return output;
     }
+    
+    public static Image<L8> Open(ref Image<L8> image, int[,] structuringElement)
+    {
+        Image<L8> output = Erode(ref image, structuringElement);
+        return Dilation(ref output, structuringElement);
+    }
+    
+    public static Image<L8> Close(ref Image<L8> image, int[,] structuringElement)
+    {
+        Image<L8> output = Dilation(ref image, structuringElement);
+        return Erode(ref output, structuringElement);
+    }
+
+    public static Image<L8> HmtTransformation(ref Image<L8> image, int[,] structuringElement1, int[,] structuringElement2)
+    {
+        var output = new Image<L8>(image.Width, image.Height);;
+        
+        var eroded = Erode(ref image, structuringElement1);
+        var complement = image.Complement();
+        var erodedComplement = Erode(ref complement, structuringElement2);
+        
+        for (int y = 0; y < image.Height; y++)
+        {
+            for (int x = 0; x < image.Width; x++)
+            {
+                byte value = 0;
+                if (eroded[x, y].PackedValue == 255 && erodedComplement[x, y].PackedValue == 255) value = 255;
+                output[x, y] = new L8(value);
+            }
+        }
+        
+        return output;
+    }
     #endregion
     
     #region M6
@@ -104,5 +138,20 @@ public static class Operations
             > byte.MaxValue => byte.MaxValue,
             _ => (byte)value
         };
+    }
+    
+    private static Image<L8> Complement(this Image<L8> input)
+    {
+        var output = input.Clone();
+        
+        for (int y = 0; y < input.Height; y++)
+        {
+            for (int x = 0; x < input.Width; x++)
+            {
+                output[x, y] = new L8((byte)(255 - input[x, y].PackedValue));
+            }
+        }
+
+        return output;
     }
 }
