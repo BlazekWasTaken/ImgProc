@@ -31,7 +31,7 @@ public class Options
     #endregion
     
     #region region growing (merging)
-    [Option(longName: "region growing (merging)", Required = false, HelpText = "Region growing (merging)")]
+    [Option(longName: "region-growing-merging", Required = false, HelpText = "Region growing (merging)")]
     public string? RegionGrowing { get; set; }
     #endregion
 }

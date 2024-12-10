@@ -128,6 +128,55 @@ public static class Operations
     #endregion
     
     #region region growing (merging)
+    public static Image<L8> RegionGrowing(Image<L8> inputImage, List<(int x, int y)> seedPoints, int threshold)
+    {
+        var outputImage = new Image<L8>(inputImage.Width, inputImage.Height);
+
+        var visited = new bool[inputImage.Height, inputImage.Width];
+        
+        var neighbors = new List<(int x, int y)>
+        {
+            ( -1, 0 ), (-1, 1), (1, 0), (1, -1), (1, 1), (-1, -1), (0, -1 ), ( 0, 1 )
+        };
+
+        byte currentRegionIntensity = 100;
+
+        foreach (var (seedX, seedY) in seedPoints)
+        {
+            if (visited[seedY, seedX]) continue;
+            
+            var queue = new Queue<(int x, int y)>();
+            queue.Enqueue((seedX, seedY));
+            visited[seedY, seedX] = true;
+            outputImage[seedX, seedY] = new L8(currentRegionIntensity);
+
+            while (queue.Count > 0)
+            {
+                var (x, y) = queue.Dequeue();
+
+                foreach (var neighbor in neighbors)
+                {
+                    var nx = x + neighbor.x;
+                    var ny = y + neighbor.y;
+                    
+                    if (nx < 0 || ny < 0 || nx >= inputImage.Width || ny >= inputImage.Height) continue;
+                    
+                    if (visited[ny, nx]) continue;
+                    
+                    int currentIntensity = inputImage[x, y].PackedValue;
+                    int neighborIntensity = inputImage[nx, ny].PackedValue;
+
+                    if (Math.Abs(currentIntensity - neighborIntensity) > threshold) continue;
+                    outputImage[nx, ny] = new L8(currentRegionIntensity);
+                    visited[ny, nx] = true;
+                    queue.Enqueue((nx, ny));
+                }
+            }
+            currentRegionIntensity += 50;
+        }
+
+        return outputImage;
+    }
     #endregion
     
     private static byte ToByte(this int value)

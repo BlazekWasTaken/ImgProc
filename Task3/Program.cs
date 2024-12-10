@@ -83,6 +83,25 @@ static void RunOptions(Options opts)
             output = Operations.HmtTransformation(ref input, structuringElement1, structuringElement2);
             output.SaveAsBmp(opts.HmtTransformation);
         }
+
+        if (!string.IsNullOrEmpty(opts.RegionGrowing))
+        {
+            var seedPoints = new List<(int x, int y)>
+            {
+                (100, 100), 
+                (300, 100), 
+                (500, 100), 
+                (100, 300), 
+                (300, 300), 
+                (500, 300), 
+                (100, 500), 
+                (300, 500), 
+                (500, 500)  
+            };
+            const int threshold = 200;
+            output = Operations.RegionGrowing(input, seedPoints, threshold);
+            output.SaveAsBmp(opts.RegionGrowing);
+        }
         
         s.Stop();
         Console.WriteLine("Time: " + s.ElapsedMilliseconds + "ms");
