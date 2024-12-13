@@ -70,15 +70,15 @@ static void RunOptions(Options opts)
         {
             var structuringElement1 = new int[3, 3]
             {
-                { 1, -1, -1 },
-                { 1, 0, -1 },
-                { 1, -1, -1 }
+                { 1, 1, 1 },
+                { -1, 0, -1 },
+                { 0, 0, 0 }
             };
             var structuringElement2 = new int[3, 3]
             {
-                { 0, -1, -1 },
-                { 0, 1, -1 },
-                { 0, -1, -1 }
+                { 0, 0, 0 },
+                { -1, 1, -1 },
+                { 1, 1, 1 }
             };
             output = Operations.HmtTransformation(ref input, structuringElement1, structuringElement2);
             output.SaveAsBmp(opts.HmtTransformation);
@@ -101,6 +101,103 @@ static void RunOptions(Options opts)
             const int threshold = 200;
             output = Operations.RegionGrowing(input, seedPoints, threshold);
             output.SaveAsBmp(opts.RegionGrowing);
+        }
+        if (!string.IsNullOrEmpty(opts.M6))
+        {
+            var elements = new List<(int[,], int[,])>
+            {
+                (new int[3, 3]
+                {
+                    { 1, 1, 1 },
+                    { -1, 0, -1 },
+                    { 0, 0, 0 },
+                }, new int[3, 3]
+                {
+                    { 0, 0, 0 },
+                    { -1, 1, -1 },
+                    { 1, 1, 1 }
+                }),
+                (new int[3, 3]
+                {
+                    { -1, 1, 1 },
+                    { 0, 0, 1 },
+                    { 0, 0, -1 },
+                }, new int[3, 3]
+                {
+                    { -1, 0, 0 },
+                    { 1, 1, 1 },
+                    { 1, 1, -1 }
+                }),
+                (new int[3, 3]
+                {
+                    { 0, -1, 1 },
+                    { 0, 0, 1 },
+                    { 0, -1, 1 },
+                }, new int[3, 3]
+                {
+                    { 1, -1, 0 },
+                    { 1, 1, 0 },
+                    { 1, -1, 0 }
+                }),
+                (new int[3, 3]
+                {
+                    { 0, 0, -1 },
+                    { 0, 0, 1 },
+                    { -1, 1, 1 },
+                }, new int[3, 3]
+                {
+                    { 1, 1, -1 },
+                    { 1, 1, 0 },
+                    { -1, 0, 0 }
+                }),
+                (new int[3, 3]
+                {
+                    { 0, 0, 0 },
+                    { -1, 0, -1 },
+                    { 1, 1, 1 },
+                }, new int[3, 3]
+                {
+                    { 1, 1, 1 },
+                    { -1, 1, -1 },
+                    { 0, 0, 0 }
+                }),
+                (new int[3, 3]
+                {
+                    { -1, 0, 0 },
+                    { 1, 0, 0 },
+                    { 1, 1, -1 },
+                }, new int[3, 3]
+                {
+                    { -1, 1, 1 },
+                    { 0, 1, 1 },
+                    { 0, 0, -1 }
+                }),
+                (new int[3, 3]
+                {
+                    { 1, -1, 0 },
+                    { 1, 0, 0 },
+                    { 1, -1, 0 },
+                }, new int[3, 3]
+                {
+                    { 0, -1, 1 },
+                    { 0, 1, 1 },
+                    { 0, -1, 1 }
+                }),
+                (new int[3, 3]
+                {
+                    { 1, 1, -1 },
+                    { 1, 0, 0 },
+                    { -1, 0, 0 },
+                }, new int[3, 3]
+                {
+                    { 0, 0, -1 },
+                    { 0, 1, 1 },
+                    { -1, 1, 1 }
+                })
+            };
+            
+            output = Operations.M6(ref input, elements);
+            output.SaveAsBmp(opts.M6);
         }
         
         s.Stop();

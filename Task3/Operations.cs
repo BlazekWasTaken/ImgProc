@@ -89,7 +89,6 @@ public static class Operations
 
         return output;
     }
-    
     public static Image<L8> Open(ref Image<L8> image, int[,] structuringElement)
     {
         Image<L8> output = Erode(ref image, structuringElement);
@@ -125,6 +124,37 @@ public static class Operations
     #endregion
     
     #region M6
+
+    public static Image<L8> M6(ref Image<L8> input, List<(int[,], int[,])> structuringElements)
+    {
+        var output = input.Clone();
+        Image<L8> compare;
+
+        do
+        {
+            compare = output.Clone();
+            foreach (var elements in structuringElements)
+            {
+                var temp = HmtTransformation(ref output, elements.Item1, elements.Item2);
+                for (int i = 0; i < output.Height; i++)
+                {
+                    for (int j = 0; j < output.Height; j++)
+                    {
+                        if (output[i, j].PackedValue == 255 || temp[i, j].PackedValue == 255)
+                        {
+                            output[i, j] = new L8(255);
+                        }
+                        else
+                        {
+                            output[i, j] = new L8(0);
+                        }
+                    }
+                }
+            }
+        } while (!compare.IsEqual(output));
+        
+        return output;
+    }
     #endregion
     
     #region region growing (merging)
@@ -202,5 +232,22 @@ public static class Operations
         }
 
         return output;
+    }
+    
+    private static bool IsEqual(this Image<L8> image1, Image<L8> image2)
+    {
+        if (image1.Width != image2.Width || image1.Height != image2.Height)
+            return false;
+
+        for (int y = 0; y < image1.Height; y++)
+        {
+            for (int x = 0; x < image1.Width; x++)
+            {
+                if (image1[x, y].PackedValue != image2[x, y].PackedValue)
+                    return false;
+            }
+        }
+
+        return true;
     }
 }

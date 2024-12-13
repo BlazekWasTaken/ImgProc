@@ -11,8 +11,8 @@ return;
 
 static void RunOptions(Options opts)
 {
-    // try
-    // {
+    try
+    {
         var s = new Stopwatch();
         s.Start();
         
@@ -107,9 +107,9 @@ static void RunOptions(Options opts)
         
         s.Stop();
         Console.WriteLine("Time: " + s.ElapsedMilliseconds + "ms");
-    // }
-    // catch (Exception e)
-    // {
-    //     Console.WriteLine("Something went wrong: " + e.Message);
-    // }
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("Something went wrong: " + e.Message);
+    }
 }

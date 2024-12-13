@@ -21,7 +21,7 @@ public class Options
     [Option(longName: "closing", Required = false, HelpText = "Closing")]
     public string? Closing { get; set; }
     
-    [Option(longName: "hmt-transformation", Required = false, HelpText = "HMT transformation")]
+    [Option(longName: "hmt", Required = false, HelpText = "HMT transformation")]
     public string? HmtTransformation { get; set; }
     #endregion
     
