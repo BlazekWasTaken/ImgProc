@@ -3,7 +3,7 @@ using CommandLine;
 
 namespace Task3;
 
-public class Options
+public abstract class Options
 {
     [Option(longName: "input", Required = true, HelpText = "Input file. Format: path.")]
     public required string Input { get; set; }

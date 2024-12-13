@@ -21,7 +21,7 @@ static void RunOptions(Options opts)
 
         if (!string.IsNullOrEmpty(opts.Dilation))
         {
-            var structuringElement = new int[3, 3]
+            var structuringElement = new[,]
             {
                 { 1, 1, 1 },
                 { 1, 0, 1 },
@@ -32,7 +32,7 @@ static void RunOptions(Options opts)
         }
         if (!string.IsNullOrEmpty(opts.Erosion))
         {
-            var structuringElement = new int[3, 3]
+            var structuringElement = new[,]
             {
                 { 1, 1, 1 },
                 { 1, 0, 1 },
@@ -44,7 +44,7 @@ static void RunOptions(Options opts)
 
         if (!string.IsNullOrEmpty(opts.Opening))
         {
-            var structuringElement = new int[3, 3]
+            var structuringElement = new[,]
             {
                 { 1, 1, 1 },
                 { 1, 0, 1 },
@@ -56,7 +56,7 @@ static void RunOptions(Options opts)
         
         if (!string.IsNullOrEmpty(opts.Closing))
         {
-            var structuringElement = new int[3, 3]
+            var structuringElement = new[,]
             {
                 { 1, 1, 1 },
                 { 1, 0, 1 },
@@ -68,13 +68,13 @@ static void RunOptions(Options opts)
 
         if (!string.IsNullOrEmpty(opts.HmtTransformation))
         {
-            var structuringElement1 = new int[3, 3]
+            var structuringElement1 = new[,]
             {
                 { 1, 1, 1 },
                 { -1, 0, -1 },
                 { 0, 0, 0 }
             };
-            var structuringElement2 = new int[3, 3]
+            var structuringElement2 = new[,]
             {
                 { 0, 0, 0 },
                 { -1, 1, -1 },
@@ -106,89 +106,89 @@ static void RunOptions(Options opts)
         {
             var elements = new List<(int[,], int[,])>
             {
-                (new int[3, 3]
+                (new[,]
                 {
                     { 1, 1, 1 },
                     { -1, 0, -1 },
                     { 0, 0, 0 },
-                }, new int[3, 3]
+                }, new[,]
                 {
                     { 0, 0, 0 },
                     { -1, 1, -1 },
                     { 1, 1, 1 }
                 }),
-                (new int[3, 3]
+                (new[,]
                 {
                     { -1, 1, 1 },
                     { 0, 0, 1 },
                     { 0, 0, -1 },
-                }, new int[3, 3]
+                }, new[,]
                 {
                     { -1, 0, 0 },
                     { 1, 1, 1 },
                     { 1, 1, -1 }
                 }),
-                (new int[3, 3]
+                (new[,]
                 {
                     { 0, -1, 1 },
                     { 0, 0, 1 },
                     { 0, -1, 1 },
-                }, new int[3, 3]
+                }, new[,]
                 {
                     { 1, -1, 0 },
                     { 1, 1, 0 },
                     { 1, -1, 0 }
                 }),
-                (new int[3, 3]
+                (new[,]
                 {
                     { 0, 0, -1 },
                     { 0, 0, 1 },
                     { -1, 1, 1 },
-                }, new int[3, 3]
+                }, new[,]
                 {
                     { 1, 1, -1 },
                     { 1, 1, 0 },
                     { -1, 0, 0 }
                 }),
-                (new int[3, 3]
+                (new[,]
                 {
                     { 0, 0, 0 },
                     { -1, 0, -1 },
                     { 1, 1, 1 },
-                }, new int[3, 3]
+                }, new[,]
                 {
                     { 1, 1, 1 },
                     { -1, 1, -1 },
                     { 0, 0, 0 }
                 }),
-                (new int[3, 3]
+                (new[,]
                 {
                     { -1, 0, 0 },
                     { 1, 0, 0 },
                     { 1, 1, -1 },
-                }, new int[3, 3]
+                }, new[,]
                 {
                     { -1, 1, 1 },
                     { 0, 1, 1 },
                     { 0, 0, -1 }
                 }),
-                (new int[3, 3]
+                (new[,]
                 {
                     { 1, -1, 0 },
                     { 1, 0, 0 },
                     { 1, -1, 0 },
-                }, new int[3, 3]
+                }, new[,]
                 {
                     { 0, -1, 1 },
                     { 0, 1, 1 },
                     { 0, -1, 1 }
                 }),
-                (new int[3, 3]
+                (new[,]
                 {
                     { 1, 1, -1 },
                     { 1, 0, 0 },
                     { -1, 0, 0 },
-                }, new int[3, 3]
+                }, new[,]
                 {
                     { 0, 0, -1 },
                     { 0, 1, 1 },
