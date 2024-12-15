@@ -92,13 +92,15 @@ public static class Operations
         return Erode(ref output, structuringElement);
     }
 
-    public static Image<L8> HmtTransformation(ref Image<L8> image, int[,] structuringElement1, int[,] structuringElement2)
+    public static Image<L8> HmtTransformation(ref Image<L8> image, int[,] structuringElement)
     {
         var output = new Image<L8>(image.Width, image.Height);
+
+        var elementComplement = structuringElement.ElementComplement();
         
-        var eroded = Erode(ref image, structuringElement1);
+        var eroded = Erode(ref image, structuringElement);
         var complement = image.Complement();
-        var erodedComplement = Erode(ref complement, structuringElement2);
+        var erodedComplement = Erode(ref complement, elementComplement);
         
         for (var y = 0; y < image.Height; y++)
         {
@@ -115,8 +117,7 @@ public static class Operations
     #endregion
     
     #region M6
-
-    public static Image<L8> M6(ref Image<L8> input, List<(int[,], int[,])> structuringElements)
+    public static Image<L8> M6(ref Image<L8> input, List<int[,]> structuringElements)
     {
         var output = input.Clone();
         Image<L8> compare;
@@ -124,9 +125,9 @@ public static class Operations
         do
         {
             compare = output.Clone();
-            foreach (var elements in structuringElements)
+            foreach (var element in structuringElements)
             {
-                var temp = HmtTransformation(ref output, elements.Item1, elements.Item2);
+                var temp = HmtTransformation(ref output, element);
                 for (int i = 0; i < output.Height; i++)
                 {
                     for (int j = 0; j < output.Height; j++)
@@ -201,16 +202,6 @@ public static class Operations
     #endregion
 
     #region other functions
-    // private static byte ToByte(this int value)
-    // {
-    //     return value switch
-    //     {
-    //         < byte.MinValue => 0,
-    //         > byte.MaxValue => byte.MaxValue,
-    //         _ => (byte)value
-    //     };
-    // }
-    
     private static Image<L8> Complement(this Image<L8> input)
     {
         var output = input.Clone();
@@ -225,7 +216,6 @@ public static class Operations
 
         return output;
     }
-    
     private static bool IsEqual(this Image<L8> image1, Image<L8> image2)
     {
         if (image1.Width != image2.Width || image1.Height != image2.Height)
@@ -241,6 +231,19 @@ public static class Operations
         }
 
         return true;
+    }
+    private static int[,] ElementComplement(this int[,] input)
+    {
+        var output = new int[input.GetLength(0), input.GetLength(1)];
+        for (int i = 0; i < input.GetLength(0); i++)
+        {
+            for (int j = 0; j < input.GetLength(1); j++)
+            {
+                if (input[i, j] == -1) continue;
+                output[i, j] = 1 - input[i, j];
+            }
+        }
+        return output;
     }
     #endregion
 }

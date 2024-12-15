@@ -68,19 +68,13 @@ static void RunOptions(Options opts)
 
         if (!string.IsNullOrEmpty(opts.HmtTransformation))
         {
-            var structuringElement1 = new[,]
+            var structuringElement = new[,]
             {
                 { 1, 1, 1 },
                 { -1, 0, -1 },
                 { 0, 0, 0 }
             };
-            var structuringElement2 = new[,]
-            {
-                { 0, 0, 0 },
-                { -1, 1, -1 },
-                { 1, 1, 1 }
-            };
-            output = Operations.HmtTransformation(ref input, structuringElement1, structuringElement2);
+            output = Operations.HmtTransformation(ref input, structuringElement);
             output.SaveAsBmp(opts.HmtTransformation);
         }
 
@@ -104,96 +98,56 @@ static void RunOptions(Options opts)
         }
         if (!string.IsNullOrEmpty(opts.M6))
         {
-            var elements = new List<(int[,], int[,])>
+            var elements = new List<int[,]>
             {
-                (new[,]
-                {
-                    { 1, 1, 1 },
-                    { -1, 0, -1 },
-                    { 0, 0, 0 },
-                }, new[,]
+                new[,]
                 {
                     { 0, 0, 0 },
                     { -1, 1, -1 },
                     { 1, 1, 1 }
-                }),
-                (new[,]
-                {
-                    { -1, 1, 1 },
-                    { 0, 0, 1 },
-                    { 0, 0, -1 },
-                }, new[,]
+                },
+                new[,]
                 {
                     { -1, 0, 0 },
                     { 1, 1, 1 },
                     { 1, 1, -1 }
-                }),
-                (new[,]
-                {
-                    { 0, -1, 1 },
-                    { 0, 0, 1 },
-                    { 0, -1, 1 },
-                }, new[,]
+                },
+                new[,]
                 {
                     { 1, -1, 0 },
                     { 1, 1, 0 },
                     { 1, -1, 0 }
-                }),
-                (new[,]
-                {
-                    { 0, 0, -1 },
-                    { 0, 0, 1 },
-                    { -1, 1, 1 },
-                }, new[,]
+                },
+                new[,]
                 {
                     { 1, 1, -1 },
                     { 1, 1, 0 },
                     { -1, 0, 0 }
-                }),
-                (new[,]
-                {
-                    { 0, 0, 0 },
-                    { -1, 0, -1 },
-                    { 1, 1, 1 },
-                }, new[,]
+                },
+                new[,]
                 {
                     { 1, 1, 1 },
                     { -1, 1, -1 },
                     { 0, 0, 0 }
-                }),
-                (new[,]
-                {
-                    { -1, 0, 0 },
-                    { 1, 0, 0 },
-                    { 1, 1, -1 },
-                }, new[,]
+                },
+                new[,]
                 {
                     { -1, 1, 1 },
                     { 0, 1, 1 },
                     { 0, 0, -1 }
-                }),
-                (new[,]
-                {
-                    { 1, -1, 0 },
-                    { 1, 0, 0 },
-                    { 1, -1, 0 },
-                }, new[,]
+                },
+                new[,]
                 {
                     { 0, -1, 1 },
                     { 0, 1, 1 },
                     { 0, -1, 1 }
-                }),
-                (new[,]
-                {
-                    { 1, 1, -1 },
-                    { 1, 0, 0 },
-                    { -1, 0, 0 },
-                }, new[,]
+                },
+                new[,]
                 {
                     { 0, 0, -1 },
                     { 0, 1, 1 },
                     { -1, 1, 1 }
-                })
+                }
             };
             
             output = Operations.M6(ref input, elements);
