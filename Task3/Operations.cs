@@ -127,7 +127,7 @@ public static class Operations
             compare = output.Clone();
             foreach (var element in structuringElements)
             {
-                var temp = HmtTransformation(ref output, element);
+                var temp = HmtTransformation(ref output, element.ElementComplement());
                 for (int i = 0; i < output.Height; i++)
                 {
                     for (int j = 0; j < output.Height; j++)

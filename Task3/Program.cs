@@ -70,9 +70,9 @@ static void RunOptions(Options opts)
         {
             var structuringElement = new[,]
             {
-                { 1, 1, 1 },
-                { -1, 0, -1 },
-                { 0, 0, 0 }
+                { 0, 0, 0 },
+                { -1, 1, -1 },
+                { 1, 1, 1 }
             };
             output = Operations.HmtTransformation(ref input, structuringElement);
             output.SaveAsBmp(opts.HmtTransformation);
@@ -109,7 +109,7 @@ static void RunOptions(Options opts)
                 new[,]
                 {
                     { -1, 0, 0 },
-                    { 1, 1, 1 },
+                    { 1, 1, 0 },
                     { 1, 1, -1 }
                 },
                 new[,]
