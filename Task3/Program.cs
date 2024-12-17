@@ -9,18 +9,18 @@ Parser.Default.ParseArguments<Options>(args)
 
 return;
 
-static List<Point> GenerateSeedPoints(int width, int height, int count)
-{
-    var seedPoints = new List<Point>();
-    
-    var random = new Random();
-    for (int i = 0; i < count; i++)
-    {
-        seedPoints.Add(new Point(random.Next(0, width), random.Next(0, height)));
-    }
-
-    return seedPoints;
-}
+// static List<Point> GenerateSeedPoints(int width, int height, int count)
+// {
+//     var seedPoints = new List<Point>();
+//     
+//     var random = new Random();
+//     for (int i = 0; i < count; i++)
+//     {
+//         seedPoints.Add(new Point(random.Next(0, width), random.Next(0, height)));
+//     }
+//
+//     return seedPoints;
+// }
 
 static void RunOptions(Options opts)
 {
@@ -47,17 +47,17 @@ static void RunOptions(Options opts)
             Operations.GrowRegions(image, seedPoints, EuclideanDistance).SaveAsBmp(opts.RegionGrowing);
             return;
 
-            bool SeparateColors(Rgb24 color1, Rgb24 color2)
-            {
-                return Math.Abs(color1.R - color2.R) <= threshold &&
-                       Math.Abs(color1.G - color2.G) <= threshold &&
-                       Math.Abs(color1.B - color2.B) <= threshold;
-            }
-            bool MeanColor(Rgb24 color1, Rgb24 color2)
-            {
-                return (Math.Abs(color1.R - color2.R) + Math.Abs(color1.G - color2.G) +
-                       Math.Abs(color1.B - color2.B)) / 3 <= threshold;
-            }
+            // bool SeparateColors(Rgb24 color1, Rgb24 color2)
+            // {
+            //     return Math.Abs(color1.R - color2.R) <= threshold &&
+            //            Math.Abs(color1.G - color2.G) <= threshold &&
+            //            Math.Abs(color1.B - color2.B) <= threshold;
+            // }
+            // bool MeanColor(Rgb24 color1, Rgb24 color2)
+            // {
+            //     return (Math.Abs(color1.R - color2.R) + Math.Abs(color1.G - color2.G) +
+            //            Math.Abs(color1.B - color2.B)) / 3 <= threshold;
+            // }
             bool EuclideanDistance(Rgb24 color1, Rgb24 color2)
             {
                 return Math.Sqrt(Math.Pow(color1.R - color2.R, 2) + Math.Pow(color1.G - color2.G, 2) +

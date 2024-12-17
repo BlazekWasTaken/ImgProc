@@ -1,5 +1,4 @@
 using CommandLine;
-// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace Task3;
 
