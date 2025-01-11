@@ -10,8 +10,24 @@ public class Options
     //One dimensional DFT and FFT
     //3. Inverse DFT and FFT to get back the original sequence (result identical to input)
     //Present the spectrum to the user with the circle in the middle after filtering - phase and/or magnitude (??)
-    [Option(longName: "fourier", Required = false, HelpText = "Direct and inverse fast Fourier transform with decimation in frequency domain")]
-    public string? Fourier { get; set; }
+    
+    [Option(longName: "input", Required = true, HelpText = "Input file. Format: path.")]
+    public required string Input { get; set; }
+    
+    [Option(longName: "od-fourier", Required = false, HelpText = "One-dimensional Fourier transform")]
+    public string? OneDimensionalFourier { get; set; }
+    
+    [Option(longName: "sd-fourier", Required = false, HelpText = "Standard Discrete Fourier transform")]
+    public string? StandardDiscreteFourier { get; set; }
+    
+    [Option(longName: "in-sd-fourier", Required = false, HelpText = "Inverse Standard Discrete Fourier transform")]
+    public string? InverseStandardFourier { get; set; }
+    
+    [Option(longName: "fourier", Required = false, HelpText = "Direct fast Fourier transform with decimation in frequency domain")]
+    public string? FastFourier { get; set; }
+    
+    [Option(longName: "in-fourier", Required = false, HelpText = "Inverse fast Fourier transform with decimation in frequency domain")]
+    public string? InverseFastFourier { get; set; }
     
     [Option(longName: "low-pass", Required = false, HelpText = "Low-pass filter (high-cut filter)")]
     public string? LowPassFilter { get; set; }
