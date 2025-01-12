@@ -15,56 +15,35 @@ public static class Operations
         var output = new Image<L8>(input.Width, input.Height);
         var width = input.Width;
         var height = input.Height;
-        var realPart = new double[width, height];
-        var imagPart = new double[width, height];
         var magnitude = new double[width, height];
-        var maxMagnitude = 0.0;
         
-        //dtf loop F(u,v)
         for (var u = 0; u < width; u++)
         {
             for (var v = 0; v < height; v++)
             {
                 var sumReal = 0.0;
                 var sumImag = 0.0;
-
                 for (var x = 0; x < width; x++)
                 {
                     for (var y = 0; y < height; y++)
                     {
-                        //Console.WriteLine("a");
                         var pixelValue = input[x, y].PackedValue;
-                        //Console.WriteLine("b");
                         var angle = -2 * Math.PI * ((u * x / (double)width) + (v * y / (double)height));
-                        //Console.WriteLine("c");
                         sumReal += pixelValue * Math.Cos(angle);
                         sumImag += pixelValue * Math.Sin(angle);
                     }
                 }
-
-                realPart[u, v] = sumReal;
-                imagPart[u, v] = sumImag;
                 magnitude[u, v] = Math.Sqrt(sumReal * sumReal + sumImag * sumImag);
-                
-                Console.WriteLine($"Magnitude[{u}, {v}] = {magnitude[u, v]}");
-                
                 magnitude[u, v] = Math.Log(1 + magnitude[u, v]);
-                if (magnitude[u, v] > maxMagnitude)
-                {
-                    maxMagnitude = magnitude[u, v];
-                }
-                
+                var maxMagnitude = magnitude.Cast<double>().Max();
                 var normalizedValue = (byte)(255 * (magnitude[u, v] / maxMagnitude));
                 output[u, v] = new L8(normalizedValue);
             }
-            Console.WriteLine("");
-            Console.WriteLine($"{u} / {width}");
         }
-        
         return output;
     }
     
-    public static Image<L8> FastFourier(Image<L8> inputImage)
+    public static (Image<L8> mag, Image<L8> phase) FastFourier(Image<L8> inputImage)
     {
         var width = inputImage.Width;
         var height = inputImage.Height;
@@ -106,36 +85,129 @@ public static class Operations
             }
         }
         
-        var maxMagnitude = 0.0;
         var magnitude = new double[height, width];
         for (var y = 0; y < height; y++)
         {
             for (var x = 0; x < width; x++)
             {
-                magnitude[y, x] = Math.Sqrt(
-                    complexData[y, x].Real * complexData[y, x].Real +
-                    complexData[y, x].Imaginary * complexData[y, x].Imaginary
-                );
+                magnitude[y, x] = complexData[y, x].Magnitude;
                 magnitude[y, x] = Math.Log(1 + magnitude[y, x]);
-                if (magnitude[y, x] > maxMagnitude)
-                {
-                    maxMagnitude = magnitude[y, x];
-                }
+            }
+        }
+        
+        var phase = new double[height, width];
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                phase[y, x] = complexData[y, x].Phase;
             }
         }
         
         Shift(magnitude);
+        Shift(phase);
         
+        var minMagnitude = magnitude.Cast<double>().Min();
+        var maxMagnitude = magnitude.Cast<double>().Max();
+        var outputMag = new Image<L8>(width, height);
+        var outputPhase = new Image<L8>(width, height);
+        
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var magnitudeValue = (byte)(255 * (magnitude[y, x] - minMagnitude) / (maxMagnitude - minMagnitude));
+                outputMag[x, y] = new L8(magnitudeValue);
+                var phaseValue = (byte)(255 * (phase[y, x] / (2 * Math.PI)));
+                outputPhase[x, y] = new L8(phaseValue);
+            }
+        }
+        return (outputMag, outputPhase);
+    }
+
+    public static Image<L8> InverseFastFourier(Image<L8> magImage, Image<L8> phaseImage)
+    {
+        if (magImage.Width != phaseImage.Width || magImage.Height != phaseImage.Height) throw new ArgumentException("Images must have the same size.");
+        
+        var width = magImage.Width;
+        var height = magImage.Height;
+        
+        var complexData = new Complex[height, width];
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                // var magnitudeValue = (byte)((17.293893832024828 - 1.1326794916281377) * magImage[y, x].PackedValue / 255);
+                // var magnitudeValue = (byte)(Math.Exp(magImage[y, x].PackedValue) - 1);
+                var magnitudeValue = magImage[y, x].PackedValue;
+                var phaseValue = (byte)(2 * Math.PI * phaseImage[x, y].PackedValue / 255 - Math.PI);
+                
+                complexData[y, x] = Complex.FromPolarCoordinates(magnitudeValue, phaseValue);
+            }
+        }
+        
+        for (var y = 0; y < height; y++)
+        {
+            var row = new Complex[width];
+            for (var x = 0; x < width; x++)
+            {
+                row[x] = complexData[y, x];
+            }
+            FastFourier1D(row, true);
+            for (var x = 0; x < width; x++)
+            {
+                complexData[y, x] = row[x];
+            }
+        }
+        
+        for (var x = 0; x < width; x++)
+        {
+            var column = new Complex[height];
+            for (var y = 0; y < height; y++)
+            {
+                column[y] = complexData[y, x];
+            }
+            FastFourier1D(column, true);
+            for (var y = 0; y < height; y++)
+            {
+                complexData[y, x] = column[y];
+            }
+        }
+        
+        var magnitude = new double[height, width];
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                magnitude[y, x] = complexData[y, x].Magnitude;
+                // magnitude[y, x] = Math.Exp(magnitude[y, x]) - 1;
+                
+                magnitude[y, x] = Math.Log(1 + magnitude[y, x]);
+            }
+        }
+        
+        var phase = new double[height, width];
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                phase[y, x] = complexData[y, x].Phase;
+            }
+        }
+        
+        var minMagnitude = magnitude.Cast<double>().Min();
+        var maxMagnitude = magnitude.Cast<double>().Max();
         var outputImage = new Image<L8>(width, height);
         for (var y = 0; y < height; y++)
         {
             for (var x = 0; x < width; x++)
             {
-                var pixelValue = (byte)(255 * (magnitude[y, x] / maxMagnitude));
-                outputImage[x, y] = new L8(pixelValue);
+                var magnitudeValue = (byte)(255 * (magnitude[y, x] - minMagnitude) / (maxMagnitude - minMagnitude));
+                // var magnitudeValue = (byte)magnitude[y, x];
+                outputImage[x, y] = new L8(magnitudeValue);
             }
         }
-
+        
         return outputImage;
     }
 
@@ -211,7 +283,7 @@ public static class Operations
     }
     
     //Swap the quadrants so that it has a spark in the middle
-    private static void Shift(double[,] data)
+    private static void Shift<T>(T[,] data)
     {
         var height = data.GetLength(0);
         var width = data.GetLength(1);
@@ -229,7 +301,7 @@ public static class Operations
         }
     }
 
-    private static void Swap(ref double a, ref double b)
+    private static void Swap<T>(ref T a, ref T b)
     {
         (a, b) = (b, a);
     }
