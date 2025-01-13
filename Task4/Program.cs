@@ -21,7 +21,7 @@ static void RunOptions(Options opts)
         if (!string.IsNullOrEmpty(opts.StandardDiscreteFourier))
         {
             var image = Image.Load<L8>(opts.Input);
-            Operations.StandardDiscreteFourier(image).SaveAsBmp(opts.StandardDiscreteFourier);
+            Operations.StandardDiscreteFourier(image).SaveAsPng(opts.StandardDiscreteFourier);
             s.Stop();
             Console.WriteLine("Time: " + s.ElapsedMilliseconds + "ms");
             return;
@@ -32,10 +32,10 @@ static void RunOptions(Options opts)
         {
             var image = Image.Load<L8>(opts.Input);
             var (mag, phase) = Operations.FastFourier(image);
-            mag.SaveAsBmp(opts.FastFourier);
+            mag.SaveAsPng(opts.FastFourier);
             var name = opts.FastFourier.Split('.')[0];
             var ext = opts.FastFourier.Split('.')[1];
-            phase.SaveAsBmp(name + "_phase." + ext);
+            phase.SaveAsPng(name + "_phase." + ext);
             s.Stop();
             Console.WriteLine("Time: " + s.ElapsedMilliseconds + "ms");
             return;
@@ -47,7 +47,7 @@ static void RunOptions(Options opts)
             var ext = opts.Input.Split('.')[1];
             var magImage = Image.Load<L8>(opts.Input);
             var phaseImage = Image.Load<L8>(name + "_phase." + ext);
-            Operations.InverseFastFourier(magImage, phaseImage).SaveAsBmp(opts.InverseFastFourier);
+            Operations.InverseFastFourier(magImage, phaseImage).SaveAsPng(opts.InverseFastFourier);
             s.Stop();
             Console.WriteLine("Time: " + s.ElapsedMilliseconds + "ms");
             return;

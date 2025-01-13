@@ -1,6 +1,9 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Bmp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Png.Chunks;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace Task4;
@@ -122,6 +125,8 @@ public static class Operations
                 outputPhase[x, y] = new L8(phaseValue);
             }
         }
+        outputMag.Metadata.GetPngMetadata().TextData.Add(new PngTextData("minMagnitude", minMagnitude.ToString(), "", ""));
+        outputMag.Metadata.GetPngMetadata().TextData.Add(new PngTextData("maxMagnitude", maxMagnitude.ToString(), "", ""));
         return (outputMag, outputPhase);
     }
 
@@ -139,12 +144,21 @@ public static class Operations
             {
                 // var magnitudeValue = (byte)((17.293893832024828 - 1.1326794916281377) * magImage[y, x].PackedValue / 255);
                 // var magnitudeValue = (byte)(Math.Exp(magImage[y, x].PackedValue) - 1);
-                var magnitudeValue = magImage[y, x].PackedValue;
-                var phaseValue = (byte)(2 * Math.PI * phaseImage[x, y].PackedValue / 255 - Math.PI);
+                var imageMinMagnitude = double.Parse(magImage.Metadata.GetPngMetadata().TextData
+                    .FirstOrDefault(x => x.Keyword == "minMagnitude").Value);
+                var imageMaxMagnitude = double.Parse(magImage.Metadata.GetPngMetadata().TextData
+                    .FirstOrDefault(x => x.Keyword == "maxMagnitude").Value);
+                
+                var magnitudeValue = (imageMaxMagnitude - imageMinMagnitude) * (magImage[y, x].PackedValue) / 255 + imageMinMagnitude;
+                magnitudeValue = Math.Exp(magnitudeValue) - 1;
+                
+                var phaseValue = 2 * Math.PI * phaseImage[x, y].PackedValue / 255 - Math.PI;
                 
                 complexData[y, x] = Complex.FromPolarCoordinates(magnitudeValue, phaseValue);
             }
         }
+        
+        Shift(complexData);
         
         for (var y = 0; y < height; y++)
         {
@@ -180,9 +194,6 @@ public static class Operations
             for (var x = 0; x < width; x++)
             {
                 magnitude[y, x] = complexData[y, x].Magnitude;
-                // magnitude[y, x] = Math.Exp(magnitude[y, x]) - 1;
-                
-                magnitude[y, x] = Math.Log(1 + magnitude[y, x]);
             }
         }
         
