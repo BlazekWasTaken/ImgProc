@@ -90,43 +90,9 @@ public static class Operations
             }
         }
         
-        var magnitudeForImage = new double[height, width];
-        var magnitude = new double[height, width];
-        for (var y = 0; y < height; y++)
-        {
-            for (var x = 0; x < width; x++)
-            {
-                magnitude[y, x] = complexData[y, x].Magnitude;
-                magnitudeForImage[y, x] = Math.Log(1 + magnitude[y, x]);
-            }
-        }
-        
-        var phase = new double[height, width];
-        for (var y = 0; y < height; y++)
-        {
-            for (var x = 0; x < width; x++)
-            {
-                phase[y, x] = complexData[y, x].Phase;
-            }
-        }
-        
-        Shift(magnitudeForImage);
-        
-        var minMagnitude = magnitudeForImage.Cast<double>().Min();
-        var maxMagnitude = magnitudeForImage.Cast<double>().Max();
-        var outputMag = new Image<L8>(width, height);
-        
-        for (var y = 0; y < height; y++)
-        {
-            for (var x = 0; x < width; x++)
-            {
-                var magnitudeValue = (byte)(255 * (magnitudeForImage[y, x] - minMagnitude) / (maxMagnitude - minMagnitude));
-                outputMag[x, y] = new L8(magnitudeValue);
-            }
-        }
-        outputMag.Metadata.GetPngMetadata().TextData.Add(new PngTextData("magnitude", JsonConvert.SerializeObject(magnitude), "", ""));
-        outputMag.Metadata.GetPngMetadata().TextData.Add(new PngTextData("phase", JsonConvert.SerializeObject(phase), "", ""));
-        return outputMag;
+        Shift(complexData);
+        var image = complexData.ToImage(width, height, false);
+        return image;
     }
 
     public static Image<L8> InverseFastFourier(Image<L8> magImage)
@@ -180,28 +146,9 @@ public static class Operations
                 complexData[y, x] = column[y];
             }
         }
-        
-        var magnitude = new double[height, width];
-        for (var y = 0; y < height; y++)
-        {
-            for (var x = 0; x < width; x++)
-            {
-                magnitude[y, x] = complexData[y, x].Magnitude;
-            }
-        }
-        
-        var minMagnitude = magnitude.Cast<double>().Min();
-        var maxMagnitude = magnitude.Cast<double>().Max();
-        var outputImage = new Image<L8>(width, height);
-        for (var y = 0; y < height; y++)
-        {
-            for (var x = 0; x < width; x++)
-            {
-                var magnitudeValue = (byte)(255 * (magnitude[y, x] - minMagnitude) / (maxMagnitude - minMagnitude));
-                outputImage[x, y] = new L8(magnitudeValue);
-            }
-        }
-        return outputImage;
+
+        var image = complexData.ToImage(height, width, true);
+        return image;
     }
 
     //this is the fast part and I don't completely understand it but well
@@ -297,6 +244,65 @@ public static class Operations
     private static void Swap<T>(ref T a, ref T b)
     {
         (a, b) = (b, a);
+    }
+
+    private static Image<L8> ToImage(
+        this Complex[,] fourier, 
+        int height, 
+        int width, 
+        bool isStandardImage)
+    {
+        var magnitudeForImage = new double[height, width];
+        var magnitude = new double[height, width];
+        var phase = new double[height, width];
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                magnitude[y, x] = fourier[y, x].Magnitude; 
+                magnitudeForImage[y, x] = !isStandardImage ? Math.Log(1 + magnitude[y, x]) : magnitude[y, x];
+            }
+        }
+        
+        if (!isStandardImage)
+        {
+            for (var y = 0; y < height; y++)
+            {
+                for (var x = 0; x < width; x++)
+                {
+                    phase[y, x] = fourier[y, x].Phase;
+                }
+            }
+        }
+        
+        var minMagnitude = magnitudeForImage.Cast<double>().Min();
+        var maxMagnitude = magnitudeForImage.Cast<double>().Max();
+        var image = new Image<L8>(width, height);
+        
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var magnitudeValue = (byte)(255 * (magnitudeForImage[y, x] - minMagnitude) / (maxMagnitude - minMagnitude));
+                image[x, y] = new L8(magnitudeValue);
+            }
+        }
+
+        if (isStandardImage) return image;
+        image.Metadata.GetPngMetadata().TextData.Add(
+            new PngTextData(
+                "magnitude",
+                JsonConvert.SerializeObject(magnitude),
+                "",
+                ""));
+        image.Metadata.GetPngMetadata().TextData.Add(
+            new PngTextData(
+                "phase",
+                JsonConvert.SerializeObject(phase),
+                "",
+                ""));
+
+        return image;
     }
     
     #endregion
