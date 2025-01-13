@@ -1,10 +1,12 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Bmp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Formats.Png.Chunks;
 using SixLabors.ImageSharp.PixelFormats;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Task4;
 
@@ -46,7 +48,7 @@ public static class Operations
         return output;
     }
     
-    public static (Image<L8> mag, Image<L8> phase) FastFourier(Image<L8> inputImage)
+    public static Image<L8> FastFourier(Image<L8> inputImage)
     {
         var width = inputImage.Width;
         var height = inputImage.Height;
@@ -88,13 +90,14 @@ public static class Operations
             }
         }
         
+        var magnitudeForImage = new double[height, width];
         var magnitude = new double[height, width];
         for (var y = 0; y < height; y++)
         {
             for (var x = 0; x < width; x++)
             {
                 magnitude[y, x] = complexData[y, x].Magnitude;
-                magnitude[y, x] = Math.Log(1 + magnitude[y, x]);
+                magnitudeForImage[y, x] = Math.Log(1 + magnitude[y, x]);
             }
         }
         
@@ -107,58 +110,48 @@ public static class Operations
             }
         }
         
-        Shift(magnitude);
-        Shift(phase);
+        Shift(magnitudeForImage);
         
-        var minMagnitude = magnitude.Cast<double>().Min();
-        var maxMagnitude = magnitude.Cast<double>().Max();
+        var minMagnitude = magnitudeForImage.Cast<double>().Min();
+        var maxMagnitude = magnitudeForImage.Cast<double>().Max();
         var outputMag = new Image<L8>(width, height);
-        var outputPhase = new Image<L8>(width, height);
         
         for (var y = 0; y < height; y++)
         {
             for (var x = 0; x < width; x++)
             {
-                var magnitudeValue = (byte)(255 * (magnitude[y, x] - minMagnitude) / (maxMagnitude - minMagnitude));
+                var magnitudeValue = (byte)(255 * (magnitudeForImage[y, x] - minMagnitude) / (maxMagnitude - minMagnitude));
                 outputMag[x, y] = new L8(magnitudeValue);
-                var phaseValue = (byte)(255 * (phase[y, x] / (2 * Math.PI)));
-                outputPhase[x, y] = new L8(phaseValue);
             }
         }
-        outputMag.Metadata.GetPngMetadata().TextData.Add(new PngTextData("minMagnitude", minMagnitude.ToString(), "", ""));
-        outputMag.Metadata.GetPngMetadata().TextData.Add(new PngTextData("maxMagnitude", maxMagnitude.ToString(), "", ""));
-        return (outputMag, outputPhase);
+        outputMag.Metadata.GetPngMetadata().TextData.Add(new PngTextData("magnitude", JsonConvert.SerializeObject(magnitude), "", ""));
+        outputMag.Metadata.GetPngMetadata().TextData.Add(new PngTextData("phase", JsonConvert.SerializeObject(phase), "", ""));
+        return outputMag;
     }
 
-    public static Image<L8> InverseFastFourier(Image<L8> magImage, Image<L8> phaseImage)
+    public static Image<L8> InverseFastFourier(Image<L8> magImage)
     {
-        if (magImage.Width != phaseImage.Width || magImage.Height != phaseImage.Height) throw new ArgumentException("Images must have the same size.");
-        
         var width = magImage.Width;
         var height = magImage.Height;
+        
+        var magnitudeString = magImage.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "magnitude").Value;
+        var phaseString = magImage.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "phase").Value;
+
+        var magnitudeData = JsonConvert.DeserializeObject<double[,]>(magnitudeString);
+        var phaseData = JsonConvert.DeserializeObject<double[,]>(phaseString);
+        
+        if (magnitudeData is null || phaseData is null) throw new ArgumentException("No metadata.");
         
         var complexData = new Complex[height, width];
         for (var y = 0; y < height; y++)
         {
             for (var x = 0; x < width; x++)
             {
-                // var magnitudeValue = (byte)((17.293893832024828 - 1.1326794916281377) * magImage[y, x].PackedValue / 255);
-                // var magnitudeValue = (byte)(Math.Exp(magImage[y, x].PackedValue) - 1);
-                var imageMinMagnitude = double.Parse(magImage.Metadata.GetPngMetadata().TextData
-                    .FirstOrDefault(x => x.Keyword == "minMagnitude").Value);
-                var imageMaxMagnitude = double.Parse(magImage.Metadata.GetPngMetadata().TextData
-                    .FirstOrDefault(x => x.Keyword == "maxMagnitude").Value);
-                
-                var magnitudeValue = (imageMaxMagnitude - imageMinMagnitude) * (magImage[y, x].PackedValue) / 255 + imageMinMagnitude;
-                magnitudeValue = Math.Exp(magnitudeValue) - 1;
-                
-                var phaseValue = 2 * Math.PI * phaseImage[x, y].PackedValue / 255 - Math.PI;
-                
-                complexData[y, x] = Complex.FromPolarCoordinates(magnitudeValue, phaseValue);
+                complexData[y, x] = Complex.FromPolarCoordinates(magnitudeData[y, x], phaseData[y, x]);
             }
         }
-        
-        Shift(complexData);
         
         for (var y = 0; y < height; y++)
         {
@@ -197,15 +190,6 @@ public static class Operations
             }
         }
         
-        var phase = new double[height, width];
-        for (var y = 0; y < height; y++)
-        {
-            for (var x = 0; x < width; x++)
-            {
-                phase[y, x] = complexData[y, x].Phase;
-            }
-        }
-        
         var minMagnitude = magnitude.Cast<double>().Min();
         var maxMagnitude = magnitude.Cast<double>().Max();
         var outputImage = new Image<L8>(width, height);
@@ -214,11 +198,9 @@ public static class Operations
             for (var x = 0; x < width; x++)
             {
                 var magnitudeValue = (byte)(255 * (magnitude[y, x] - minMagnitude) / (maxMagnitude - minMagnitude));
-                // var magnitudeValue = (byte)magnitude[y, x];
                 outputImage[x, y] = new L8(magnitudeValue);
             }
         }
-        
         return outputImage;
     }
 

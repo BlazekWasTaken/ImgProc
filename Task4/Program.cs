@@ -31,11 +31,7 @@ static void RunOptions(Options opts)
         if (!string.IsNullOrEmpty(opts.FastFourier))
         {
             var image = Image.Load<L8>(opts.Input);
-            var (mag, phase) = Operations.FastFourier(image);
-            mag.SaveAsPng(opts.FastFourier);
-            var name = opts.FastFourier.Split('.')[0];
-            var ext = opts.FastFourier.Split('.')[1];
-            phase.SaveAsPng(name + "_phase." + ext);
+            Operations.FastFourier(image).SaveAsPng(opts.FastFourier);
             s.Stop();
             Console.WriteLine("Time: " + s.ElapsedMilliseconds + "ms");
             return;
@@ -43,11 +39,8 @@ static void RunOptions(Options opts)
 
         if (!string.IsNullOrEmpty(opts.InverseFastFourier))
         {
-            var name = opts.Input.Split('.')[0];
-            var ext = opts.Input.Split('.')[1];
             var magImage = Image.Load<L8>(opts.Input);
-            var phaseImage = Image.Load<L8>(name + "_phase." + ext);
-            Operations.InverseFastFourier(magImage, phaseImage).SaveAsPng(opts.InverseFastFourier);
+            Operations.InverseFastFourier(magImage).SaveAsPng(opts.InverseFastFourier);
             s.Stop();
             Console.WriteLine("Time: " + s.ElapsedMilliseconds + "ms");
             return;
