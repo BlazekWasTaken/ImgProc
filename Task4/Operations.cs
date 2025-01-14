@@ -1,26 +1,20 @@
 using System.Numerics;
-using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Bmp;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Formats.Png.Chunks;
 using SixLabors.ImageSharp.PixelFormats;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Task4;
 
-//t2 all f
 public static class Operations
 {
     #region fourier
 
     public static Image<L8> StandardDiscreteFourier(Image<L8> input)
     {
-        var output = new Image<L8>(input.Width, input.Height);
         var width = input.Width;
         var height = input.Height;
-        var magnitude = new double[width, height];
+        var magnitude = new Complex[width, height];
         
         for (var u = 0; u < width; u++)
         {
@@ -38,15 +32,63 @@ public static class Operations
                         sumImag += pixelValue * Math.Sin(angle);
                     }
                 }
-                magnitude[u, v] = Math.Sqrt(sumReal * sumReal + sumImag * sumImag);
-                magnitude[u, v] = Math.Log(1 + magnitude[u, v]);
-                var maxMagnitude = magnitude.Cast<double>().Max();
-                var normalizedValue = (byte)(255 * (magnitude[u, v] / maxMagnitude));
-                output[u, v] = new L8(normalizedValue);
+                magnitude[u, v] = new Complex(sumReal, sumImag);
             }
         }
-        return output;
+        Shift(magnitude);
+        return magnitude.ToImage(height, width, false);
     }
+
+    public static Image<L8> StandardInverseFourier(Image<L8> input)
+    {
+        var width = input.Width;
+        var height = input.Height;
+        
+      var magnitudeString = input.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "magnitude").Value;
+        var phaseString = input.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "phase").Value;
+        
+        var magnitudeData = JsonConvert.DeserializeObject<double[,]>(magnitudeString);
+        var phaseData = JsonConvert.DeserializeObject<double[,]>(phaseString);
+        
+        if (magnitudeData is null || phaseData is null) throw new ArgumentException("No metadata.");
+        
+        var complexData = new Complex[height, width];
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                complexData[y, x] = Complex.FromPolarCoordinates(magnitudeData[y, x], phaseData[y, x]);
+            }
+        }
+        var spatialData = new Complex[input.Height, input.Width];
+
+        for (var y = 0; y < height; y ++)
+        {
+            for (var x = 0; x < width; x ++)
+            {
+                var sum = Complex.Zero;
+
+                for(var v = 0; v < height; v++)
+                {
+                    for(var u = 0; u < width; u++)
+                    {
+                        var angle = 2 * Math.PI * ((u * x / (double)width) + (v * y / (double)height));
+                        var exp = new Complex(Math.Cos(angle), Math.Sin(angle));
+                        sum += complexData[v, u] * exp;
+                    }
+                }
+                spatialData[x, y] = 1/(double)width*(1/(double)height)*sum;
+            }
+        }
+        
+        return spatialData.ToImage(height, width, true);
+    }
+    
+    #endregion fourier
+    
+    #region fast fourier
     
     public static Image<L8> FastFourier(Image<L8> inputImage)
     {
@@ -246,11 +288,7 @@ public static class Operations
         (a, b) = (b, a);
     }
 
-    private static Image<L8> ToImage(
-        this Complex[,] fourier, 
-        int height, 
-        int width, 
-        bool isStandardImage)
+    private static Image<L8> ToImage(this Complex[,] fourier, int height, int width, bool isStandardImage)
     {
         var magnitudeForImage = new double[height, width];
         var magnitude = new double[height, width];
@@ -305,5 +343,5 @@ public static class Operations
         return image;
     }
     
-    #endregion
+    #endregion fast fourier
 }
