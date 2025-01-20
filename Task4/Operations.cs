@@ -118,7 +118,7 @@ public static class Operations
                 complexData[y, x] = Complex.FromPolarCoordinates(magnitudeData[y, x], phaseData[y, x]);
             }
         }
-        
+
         for (var y = 0; y < height; y++)
         {
             var row = new Complex[width];
@@ -149,6 +149,122 @@ public static class Operations
 
         var image = complexData.ToImage(height, width, true);
         return image;
+    }
+    
+    public static (Image<L8> magImage, Image<L8> filter, Image<L8> result) Filter(Image<L8> image, Func<double, bool> comparison)
+    {
+        var width = image.Width;
+        var height = image.Height;
+
+        var r1 = FastFourier(image);
+        
+        var magnitudeString = r1.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "magnitude").Value;
+        var phaseString = r1.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "phase").Value;
+
+        var magnitudeData = JsonConvert.DeserializeObject<double[,]>(magnitudeString);
+        var phaseData = JsonConvert.DeserializeObject<double[,]>(phaseString);
+        var complexData = new Complex[width, height];
+
+        var dc = Complex.FromPolarCoordinates(magnitudeData[height / 2, width / 2], phaseData[height / 2, width / 2]);
+        var min = magnitudeData.Cast<double>().Min();
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                var distanceFromCenter = Math.Sqrt(Math.Pow((height - 1.0) / 2 - i, 2) + Math.Pow((width - 1.0) / 2 - j, 2));
+                complexData[i, j] = comparison(distanceFromCenter)
+                    ? Complex.FromPolarCoordinates(magnitudeData[i, j], phaseData[i, j])
+                    : min;
+            }
+        }
+        complexData[height / 2, width / 2] = dc;
+        
+        var r2 = complexData.ToImage(height, width, false);
+        var r3 = InverseFastFourier(r2);
+        
+        return (r1, r2, r3);
+    }
+
+    public static (Image<L8> magImage, Image<L8> filter, Image<L8> result) HighPassEdgeFilter(
+        Image<L8> image,
+        Image<L8> mask)
+    {
+        if (image.Height != mask.Height || image.Width != mask.Width) 
+            throw new ArgumentException("Image and mask have to be the same size");
+        
+        var width = image.Width;
+        var height = image.Height;
+
+        var r1 = FastFourier(image);
+        
+        var magnitudeString = r1.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "magnitude").Value;
+        var phaseString = r1.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "phase").Value;
+
+        var magnitudeData = JsonConvert.DeserializeObject<double[,]>(magnitudeString);
+        var phaseData = JsonConvert.DeserializeObject<double[,]>(phaseString);
+        var complexData = new Complex[width, height];
+
+        var dc = Complex.FromPolarCoordinates(magnitudeData[height / 2, width / 2], phaseData[height / 2, width / 2]);
+        var min = magnitudeData.Cast<double>().Min();
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                var compare = mask[j, i].PackedValue == 255;
+                complexData[i, j] = compare
+                    ? Complex.FromPolarCoordinates(magnitudeData[i, j], phaseData[i, j])
+                    : min;
+            }
+        }
+        complexData[height / 2, width / 2] = dc;
+        
+        var r2 = complexData.ToImage(height, width, false);
+        var r3 = InverseFastFourier(r2);
+        
+        return (r1, r2, r3);
+    }
+
+    public static (Image<L8> magImage, Image<L8> filter, Image<L8> result) PhaseFilter(Image<L8> image, int k, int l)
+    {
+        var width = image.Width;
+        var height = image.Height;
+
+        var r1 = FastFourier(image);
+        
+        var magnitudeString = r1.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "magnitude").Value;
+        var phaseString = r1.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "phase").Value;
+
+        var magnitudeData = JsonConvert.DeserializeObject<double[,]>(magnitudeString);
+        var phaseData = JsonConvert.DeserializeObject<double[,]>(phaseString);
+        var complexData = new Complex[width, height];
+        
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                var maskValue = Complex.Exp(
+                    new Complex(
+                        0,
+                        -2 * j * k * Math.PI / height + -2 * i * l * Math.PI / width + (k + l) * Math.PI
+                    ));
+                
+                complexData[i, j] = Complex.FromPolarCoordinates(
+                    magnitudeData[i, j] * maskValue.Magnitude, 
+                    phaseData[i, j] * maskValue.Phase
+                    );
+            }
+        }
+        
+        var r2 = complexData.ToImage(height, width, false);
+        var r3 = InverseFastFourier(r2);
+        
+        return (r1, r2, r3);
     }
 
     //this is the fast part and I don't completely understand it but well
