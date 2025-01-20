@@ -26,7 +26,15 @@ static void RunOptions(Options opts)
             Console.WriteLine("Time: " + s.ElapsedMilliseconds + "ms");
             return;
         }
-        if (!string.IsNullOrEmpty(opts.InverseStandardFourier)){}
+
+        if (!string.IsNullOrEmpty(opts.InverseStandardFourier))
+        {
+            var image = Image.Load<L8>(opts.Input);
+            Operations.StandardInverseFourier(image).SaveAsPng(opts.InverseStandardFourier);
+            s.Stop();
+            Console.WriteLine("Time: " + s.ElapsedMilliseconds + "ms");
+            return;
+        }
 
         if (!string.IsNullOrEmpty(opts.FastFourier))
         {
