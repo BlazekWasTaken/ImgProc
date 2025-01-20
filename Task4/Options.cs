@@ -4,13 +4,6 @@ namespace Task4;
 
 public class Options
 {
-    //1. Standard discrete fourier transform
-    //2. Implement the fast fourier transform
-    //Both should yield the same result
-    //One dimensional DFT and FFT
-    //3. Inverse DFT and FFT to get back the original sequence (result identical to input)
-    //Present the spectrum to the user with the circle in the middle after filtering - phase and/or magnitude (??)
-    
     [Option(longName: "input", Required = true, HelpText = "Input file. Format: path.")]
     public required string Input { get; set; }
     

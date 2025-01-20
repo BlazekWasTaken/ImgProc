@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using CommandLine;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Bmp;
 using SixLabors.ImageSharp.PixelFormats;
 using Task4;
 
@@ -11,8 +10,8 @@ return;
 
 static void RunOptions(Options opts)
 {
-    // try
-    // {
+    try
+    {
         var s = new Stopwatch();
         s.Start();
         
@@ -146,9 +145,9 @@ static void RunOptions(Options opts)
             Console.WriteLine("Time: " + s.ElapsedMilliseconds + "ms");
             return;
         }
-    // }
-    // catch (Exception e)
-    // {
-    //     Console.WriteLine("Something went wrong: " + e.Message);
-    // }
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("Something went wrong: " + e.Message);
+    }
 }

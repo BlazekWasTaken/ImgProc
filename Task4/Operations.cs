@@ -209,7 +209,7 @@ public static class Operations
         var phaseData = JsonConvert.DeserializeObject<double[,]>(phaseString);
         var complexData = new Complex[width, height];
 
-        var dc = Complex.FromPolarCoordinates(magnitudeData[height / 2, width / 2], phaseData[height / 2, width / 2]);
+        var dc = Complex.FromPolarCoordinates(magnitudeData![height / 2, width / 2], phaseData![height / 2, width / 2]);
         var min = magnitudeData.Cast<double>().Min();
         for (int i = 0; i < width; i++)
         {
@@ -250,7 +250,7 @@ public static class Operations
         var phaseData = JsonConvert.DeserializeObject<double[,]>(phaseString);
         var complexData = new Complex[width, height];
 
-        var dc = Complex.FromPolarCoordinates(magnitudeData[height / 2, width / 2], phaseData[height / 2, width / 2]);
+        var dc = Complex.FromPolarCoordinates(magnitudeData![height / 2, width / 2], phaseData![height / 2, width / 2]);
         var min = magnitudeData.Cast<double>().Min();
         for (int i = 0; i < width; i++)
         {
@@ -297,8 +297,8 @@ public static class Operations
                     ));
                 
                 complexData[i, j] = Complex.FromPolarCoordinates(
-                    magnitudeData[i, j] * maskValue.Magnitude, 
-                    phaseData[i, j] * maskValue.Phase
+                    magnitudeData![i, j] * maskValue.Magnitude, 
+                    phaseData![i, j] * maskValue.Phase
                     );
             }
         }
@@ -308,41 +308,35 @@ public static class Operations
         
         return (r1, r2, r3);
     }
-
-    //this is the fast part and I don't completely understand it but well
+    
     private static void FastFourier1D(Complex[] data, bool inverse)
     {
-        //self-explanatory
         var n = data.Length;
         if ((n & (n - 1)) != 0)
         {
             throw new ArgumentException("Input size must be a power of 2.");
         }
-
-        //wikipedia has a great article on that one
+        
         BitReversal(data);
-
-        //this is the iterative part (decimation in frequency)
-        double sign = inverse ? 1 : -1; //direction of the transform
+        
+        double sign = inverse ? 1 : -1;
         for (var length = 2; length <= n; length *= 2)
         {
-            //dark magic:
             var halfLength = length / 2;
-            var wLength = Complex.Exp(new Complex(0, sign * 2 * Math.PI / length)); // Twiddle factor
+            var wLength = Complex.Exp(new Complex(0, sign * 2 * Math.PI / length));
 
             for (var i = 0; i < n; i += length)
             {
-                var w = Complex.One; // Start with W^0
+                var w = Complex.One;
                 for (var j = 0; j < halfLength; j++)
                 {
                     var even = data[i + j];
                     var odd = w * data[i + j + halfLength];
-                    data[i + j] = even + odd;              // Butterfly operation
-                    data[i + j + halfLength] = even - odd; // Butterfly operation
-                    w *= wLength; // Update twiddle factor
+                    data[i + j] = even + odd;              
+                    data[i + j + halfLength] = even - odd; 
+                    w *= wLength;
                 }
             }
-            //end of dark magic
         }
 
         if (!inverse) return;
@@ -380,7 +374,6 @@ public static class Operations
         return reversed;
     }
     
-    //Swap the quadrants so that it has a spark in the middle
     private static void Shift<T>(T[,] data)
     {
         var height = data.GetLength(0);
