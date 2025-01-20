@@ -1,68 +1,94 @@
 using System.Numerics;
-using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png.Chunks;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace Task4;
 
-//t2 all f
 public static class Operations
 {
     #region fourier
 
     public static Image<L8> StandardDiscreteFourier(Image<L8> input)
     {
-        var output = new Image<L8>(input.Width, input.Height);
         var width = input.Width;
         var height = input.Height;
-        var realPart = new double[width, height];
-        var imagPart = new double[width, height];
-        var magnitude = new double[width, height];
-        var maxMagnitude = 0.0;
+        var magnitude = new Complex[width, height];
         
-        //dtf loop F(u,v)
         for (var u = 0; u < width; u++)
         {
             for (var v = 0; v < height; v++)
             {
                 var sumReal = 0.0;
                 var sumImag = 0.0;
-
                 for (var x = 0; x < width; x++)
                 {
                     for (var y = 0; y < height; y++)
                     {
-                        //Console.WriteLine("a");
                         var pixelValue = input[x, y].PackedValue;
-                        //Console.WriteLine("b");
                         var angle = -2 * Math.PI * ((u * x / (double)width) + (v * y / (double)height));
-                        //Console.WriteLine("c");
                         sumReal += pixelValue * Math.Cos(angle);
                         sumImag += pixelValue * Math.Sin(angle);
                     }
                 }
-
-                realPart[u, v] = sumReal;
-                imagPart[u, v] = sumImag;
-                magnitude[u, v] = Math.Sqrt(sumReal * sumReal + sumImag * sumImag);
-                
-                Console.WriteLine($"Magnitude[{u}, {v}] = {magnitude[u, v]}");
-                
-                magnitude[u, v] = Math.Log(1 + magnitude[u, v]);
-                if (magnitude[u, v] > maxMagnitude)
-                {
-                    maxMagnitude = magnitude[u, v];
-                }
-                
-                var normalizedValue = (byte)(255 * (magnitude[u, v] / maxMagnitude));
-                output[u, v] = new L8(normalizedValue);
+                magnitude[u, v] = new Complex(sumReal, sumImag);
             }
-            Console.WriteLine("");
-            Console.WriteLine($"{u} / {width}");
+        }
+        Shift(magnitude);
+        return magnitude.ToImage(height, width, false);
+    }
+
+    public static Image<L8> StandardInverseFourier(Image<L8> input)
+    {
+        var width = input.Width;
+        var height = input.Height;
+        
+      var magnitudeString = input.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "magnitude").Value;
+        var phaseString = input.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "phase").Value;
+        
+        var magnitudeData = JsonConvert.DeserializeObject<double[,]>(magnitudeString);
+        var phaseData = JsonConvert.DeserializeObject<double[,]>(phaseString);
+        
+        if (magnitudeData is null || phaseData is null) throw new ArgumentException("No metadata.");
+        
+        var complexData = new Complex[height, width];
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                complexData[y, x] = Complex.FromPolarCoordinates(magnitudeData[y, x], phaseData[y, x]);
+            }
+        }
+        var spatialData = new Complex[input.Height, input.Width];
+
+        for (var y = 0; y < height; y ++)
+        {
+            for (var x = 0; x < width; x ++)
+            {
+                var sum = Complex.Zero;
+
+                for(var v = 0; v < height; v++)
+                {
+                    for(var u = 0; u < width; u++)
+                    {
+                        var angle = 2 * Math.PI * ((u * x / (double)width) + (v * y / (double)height));
+                        var exp = new Complex(Math.Cos(angle), Math.Sin(angle));
+                        sum += complexData[v, u] * exp;
+                    }
+                }
+                spatialData[x, y] = 1/(double)width*(1/(double)height)*sum;
+            }
         }
         
-        return output;
+        return spatialData.ToImage(height, width, true);
     }
+    
+    #endregion fourier
+    
+    #region fast fourier
     
     public static Image<L8> FastFourier(Image<L8> inputImage)
     {
@@ -106,73 +132,211 @@ public static class Operations
             }
         }
         
-        var maxMagnitude = 0.0;
-        var magnitude = new double[height, width];
-        for (var y = 0; y < height; y++)
-        {
-            for (var x = 0; x < width; x++)
-            {
-                magnitude[y, x] = Math.Sqrt(
-                    complexData[y, x].Real * complexData[y, x].Real +
-                    complexData[y, x].Imaginary * complexData[y, x].Imaginary
-                );
-                magnitude[y, x] = Math.Log(1 + magnitude[y, x]);
-                if (magnitude[y, x] > maxMagnitude)
-                {
-                    maxMagnitude = magnitude[y, x];
-                }
-            }
-        }
-        
-        Shift(magnitude);
-        
-        var outputImage = new Image<L8>(width, height);
-        for (var y = 0; y < height; y++)
-        {
-            for (var x = 0; x < width; x++)
-            {
-                var pixelValue = (byte)(255 * (magnitude[y, x] / maxMagnitude));
-                outputImage[x, y] = new L8(pixelValue);
-            }
-        }
-
-        return outputImage;
+        Shift(complexData);
+        var image = complexData.ToImage(width, height, false);
+        return image;
     }
 
-    //this is the fast part and I don't completely understand it but well
+    public static Image<L8> InverseFastFourier(Image<L8> magImage)
+    {
+        var width = magImage.Width;
+        var height = magImage.Height;
+        
+        var magnitudeString = magImage.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "magnitude").Value;
+        var phaseString = magImage.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "phase").Value;
+
+        var magnitudeData = JsonConvert.DeserializeObject<double[,]>(magnitudeString);
+        var phaseData = JsonConvert.DeserializeObject<double[,]>(phaseString);
+        
+        if (magnitudeData is null || phaseData is null) throw new ArgumentException("No metadata.");
+        
+        var complexData = new Complex[height, width];
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                complexData[y, x] = Complex.FromPolarCoordinates(magnitudeData[y, x], phaseData[y, x]);
+            }
+        }
+
+        for (var y = 0; y < height; y++)
+        {
+            var row = new Complex[width];
+            for (var x = 0; x < width; x++)
+            {
+                row[x] = complexData[y, x];
+            }
+            FastFourier1D(row, true);
+            for (var x = 0; x < width; x++)
+            {
+                complexData[y, x] = row[x];
+            }
+        }
+        
+        for (var x = 0; x < width; x++)
+        {
+            var column = new Complex[height];
+            for (var y = 0; y < height; y++)
+            {
+                column[y] = complexData[y, x];
+            }
+            FastFourier1D(column, true);
+            for (var y = 0; y < height; y++)
+            {
+                complexData[y, x] = column[y];
+            }
+        }
+
+        var image = complexData.ToImage(height, width, true);
+        return image;
+    }
+    
+    public static (Image<L8> magImage, Image<L8> filter, Image<L8> result) Filter(Image<L8> image, Func<double, bool> comparison)
+    {
+        var width = image.Width;
+        var height = image.Height;
+
+        var r1 = FastFourier(image);
+        
+        var magnitudeString = r1.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "magnitude").Value;
+        var phaseString = r1.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "phase").Value;
+
+        var magnitudeData = JsonConvert.DeserializeObject<double[,]>(magnitudeString);
+        var phaseData = JsonConvert.DeserializeObject<double[,]>(phaseString);
+        var complexData = new Complex[width, height];
+
+        var dc = Complex.FromPolarCoordinates(magnitudeData![height / 2, width / 2], phaseData![height / 2, width / 2]);
+        var min = magnitudeData.Cast<double>().Min();
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                var distanceFromCenter = Math.Sqrt(Math.Pow((height - 1.0) / 2 - i, 2) + Math.Pow((width - 1.0) / 2 - j, 2));
+                complexData[i, j] = comparison(distanceFromCenter)
+                    ? Complex.FromPolarCoordinates(magnitudeData[i, j], phaseData[i, j])
+                    : min;
+            }
+        }
+        complexData[height / 2, width / 2] = dc;
+        
+        var r2 = complexData.ToImage(height, width, false);
+        var r3 = InverseFastFourier(r2);
+        
+        return (r1, r2, r3);
+    }
+
+    public static (Image<L8> magImage, Image<L8> filter, Image<L8> result) HighPassEdgeFilter(
+        Image<L8> image,
+        Image<L8> mask)
+    {
+        if (image.Height != mask.Height || image.Width != mask.Width) 
+            throw new ArgumentException("Image and mask have to be the same size");
+        
+        var width = image.Width;
+        var height = image.Height;
+
+        var r1 = FastFourier(image);
+        
+        var magnitudeString = r1.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "magnitude").Value;
+        var phaseString = r1.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "phase").Value;
+
+        var magnitudeData = JsonConvert.DeserializeObject<double[,]>(magnitudeString);
+        var phaseData = JsonConvert.DeserializeObject<double[,]>(phaseString);
+        var complexData = new Complex[width, height];
+
+        var dc = Complex.FromPolarCoordinates(magnitudeData![height / 2, width / 2], phaseData![height / 2, width / 2]);
+        var min = magnitudeData.Cast<double>().Min();
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                var compare = mask[j, i].PackedValue == 255;
+                complexData[i, j] = compare
+                    ? Complex.FromPolarCoordinates(magnitudeData[i, j], phaseData[i, j])
+                    : min;
+            }
+        }
+        complexData[height / 2, width / 2] = dc;
+        
+        var r2 = complexData.ToImage(height, width, false);
+        var r3 = InverseFastFourier(r2);
+        
+        return (r1, r2, r3);
+    }
+
+    public static (Image<L8> magImage, Image<L8> filter, Image<L8> result) PhaseFilter(Image<L8> image, int k, int l)
+    {
+        var width = image.Width;
+        var height = image.Height;
+
+        var r1 = FastFourier(image);
+        
+        var magnitudeString = r1.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "magnitude").Value;
+        var phaseString = r1.Metadata.GetPngMetadata().TextData
+            .FirstOrDefault(x => x.Keyword == "phase").Value;
+
+        var magnitudeData = JsonConvert.DeserializeObject<double[,]>(magnitudeString);
+        var phaseData = JsonConvert.DeserializeObject<double[,]>(phaseString);
+        var complexData = new Complex[width, height];
+        
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                var maskValue = Complex.Exp(
+                    new Complex(
+                        0,
+                        -2 * j * k * Math.PI / height + -2 * i * l * Math.PI / width + (k + l) * Math.PI
+                    ));
+                
+                complexData[i, j] = Complex.FromPolarCoordinates(
+                    magnitudeData![i, j] * maskValue.Magnitude, 
+                    phaseData![i, j] * maskValue.Phase
+                    );
+            }
+        }
+        
+        var r2 = complexData.ToImage(height, width, false);
+        var r3 = InverseFastFourier(r2);
+        
+        return (r1, r2, r3);
+    }
+    
     private static void FastFourier1D(Complex[] data, bool inverse)
     {
-        //self-explanatory
         var n = data.Length;
         if ((n & (n - 1)) != 0)
         {
             throw new ArgumentException("Input size must be a power of 2.");
         }
-
-        //wikipedia has a great article on that one
+        
         BitReversal(data);
-
-        //this is the iterative part (decimation in frequency)
-        double sign = inverse ? 1 : -1; //direction of the transform
+        
+        double sign = inverse ? 1 : -1;
         for (var length = 2; length <= n; length *= 2)
         {
-            //dark magic:
             var halfLength = length / 2;
-            var wLength = Complex.Exp(new Complex(0, sign * 2 * Math.PI / length)); // Twiddle factor
+            var wLength = Complex.Exp(new Complex(0, sign * 2 * Math.PI / length));
 
             for (var i = 0; i < n; i += length)
             {
-                var w = Complex.One; // Start with W^0
+                var w = Complex.One;
                 for (var j = 0; j < halfLength; j++)
                 {
                     var even = data[i + j];
                     var odd = w * data[i + j + halfLength];
-                    data[i + j] = even + odd;              // Butterfly operation
-                    data[i + j + halfLength] = even - odd; // Butterfly operation
-                    w *= wLength; // Update twiddle factor
+                    data[i + j] = even + odd;              
+                    data[i + j + halfLength] = even - odd; 
+                    w *= wLength;
                 }
             }
-            //end of dark magic
         }
 
         if (!inverse) return;
@@ -210,8 +374,7 @@ public static class Operations
         return reversed;
     }
     
-    //Swap the quadrants so that it has a spark in the middle
-    private static void Shift(double[,] data)
+    private static void Shift<T>(T[,] data)
     {
         var height = data.GetLength(0);
         var width = data.GetLength(1);
@@ -229,10 +392,65 @@ public static class Operations
         }
     }
 
-    private static void Swap(ref double a, ref double b)
+    private static void Swap<T>(ref T a, ref T b)
     {
         (a, b) = (b, a);
     }
+
+    private static Image<L8> ToImage(this Complex[,] fourier, int height, int width, bool isStandardImage)
+    {
+        var magnitudeForImage = new double[height, width];
+        var magnitude = new double[height, width];
+        var phase = new double[height, width];
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                magnitude[y, x] = fourier[y, x].Magnitude; 
+                magnitudeForImage[y, x] = !isStandardImage ? Math.Log(1 + magnitude[y, x]) : magnitude[y, x];
+            }
+        }
+        
+        if (!isStandardImage)
+        {
+            for (var y = 0; y < height; y++)
+            {
+                for (var x = 0; x < width; x++)
+                {
+                    phase[y, x] = fourier[y, x].Phase;
+                }
+            }
+        }
+        
+        var minMagnitude = magnitudeForImage.Cast<double>().Min();
+        var maxMagnitude = magnitudeForImage.Cast<double>().Max();
+        var image = new Image<L8>(width, height);
+        
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var magnitudeValue = (byte)(255 * (magnitudeForImage[y, x] - minMagnitude) / (maxMagnitude - minMagnitude));
+                image[x, y] = new L8(magnitudeValue);
+            }
+        }
+
+        if (isStandardImage) return image;
+        image.Metadata.GetPngMetadata().TextData.Add(
+            new PngTextData(
+                "magnitude",
+                JsonConvert.SerializeObject(magnitude),
+                "",
+                ""));
+        image.Metadata.GetPngMetadata().TextData.Add(
+            new PngTextData(
+                "phase",
+                JsonConvert.SerializeObject(phase),
+                "",
+                ""));
+
+        return image;
+    }
     
-    #endregion
+    #endregion fast fourier
 }
