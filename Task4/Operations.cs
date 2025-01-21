@@ -317,10 +317,8 @@ public static class Operations
             throw new ArgumentException("Input size must be a power of 2.");
         }
         
-        BitReversal(data);
-        
         double sign = inverse ? 1 : -1;
-        for (var length = 2; length <= n; length *= 2)
+        for (var length = n; length >= 2; length /= 2)
         {
             var halfLength = length / 2;
             var wLength = Complex.Exp(new Complex(0, sign * 2 * Math.PI / length));
@@ -331,13 +329,15 @@ public static class Operations
                 for (var j = 0; j < halfLength; j++)
                 {
                     var even = data[i + j];
-                    var odd = w * data[i + j + halfLength];
-                    data[i + j] = even + odd;              
-                    data[i + j + halfLength] = even - odd; 
+                    var odd = data[i + j + halfLength];
+                    data[i + j] = even + odd;
+                    data[i + j + halfLength] = (even - odd) * w;
                     w *= wLength;
                 }
             }
         }
+        
+        BitReversal(data);
 
         if (!inverse) return;
         {
